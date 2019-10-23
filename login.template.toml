@@ -1,0 +1,13 @@
+["http://localhost:8080/"]
+contests = ["testing"]
+username = "test"
+password = "test"
+
+# Uncomment and fill in to upload to online judge
+# You can leave the password empty, in that case you will be required to type
+# it in everytime you upload a problem
+
+# ["https://hpi.de/friedrich/judge/"]
+# contests = ["<TESTING CONTEST 1>", "<TESTING CONTEST 2>"]
+# username = "<YOUR USERNAME>"
+# password = "<YOUR PASSWORD>"

@@ -1,0 +1,35 @@
+version: '3'
+services:
+  mariadb:
+    image: mariadb:10.4
+    volumes:
+      # Unfortunately mounting a local directory is bugged in mariadb right
+      # now, see https://github.com/docker-library/mariadb/issues/95
+      # - ./db:/var/lib/mysql
+      - 'judge-db:/var/lib/mysql'
+    environment:
+      MYSQL_USER: domjudge
+      MYSQL_DATABASE: domjudge
+      MYSQL_PASSWORD: domjudge
+      MYSQL_ROOT_PASSWORD: domjudge
+    command: --max-connections=1000 --max-allowed-packet=1G --innodb-log-file-size=1G --innodb-flush-method=littlesync --innodb-use-native-aio=OFF --log_bin=ON
+  judge-web:
+    image: hpiicpc/judge-web:latest
+    environment:
+      DJ_DB_INSTALL_BARE: 1
+      PHP_UPLOAD_MAX_FILESIZE: 1G
+      PHP_POST_MAX_SIZE: 1G
+      NGINX_CLIENT_MAX_BODY_SIZE: 1G
+    ports:
+      - '8080:80'
+    restart: unless-stopped
+  judge-judgehost:
+    image: hpiicpc/judge-judgehost:latest
+    privileged: true
+    hostname: judge-judgehost
+    environment:
+      DOMSERVER_BASEURL: http://judge-web/
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
+volumes:
+  judge-db:

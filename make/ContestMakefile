@@ -1,0 +1,24 @@
+REPO_ROOT=$(shell git rev-parse --show-toplevel)
+TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
+PROBLEMS=$(shell find . -mindepth 1 -maxdepth 1 -type d | sort)
+
+.PHONY: notes
+notes:
+	$(foreach p,$(PROBLEMS),$(MAKE) -C $(p) notes;)
+	pdfjoin -q -o notes.pdf $(foreach p,$(PROBLEMS),$(p)/build/$(notdir $(p))-notes.pdf)
+
+.PHONY: clean
+clean:
+	rm -f notes.pdf contest.pdf
+
+.PHONY: check-notes
+check-notes:
+	$(foreach p,$(PROBLEMS),$(MAKE) -C $(p) check-notes;)
+
+.PHONY: contest-pdf
+contest-pdf:
+	$(TOOLS_MAKE_DIR)/build-contest-pdf.sh contest.pdf $(PROBLEMS)
+
+ifndef VERBOSE
+.SILENT:
+endif
