@@ -103,7 +103,7 @@ build/problem/problem.pdf: problem.tex $(wildcard .template/*) build/testcases/s
 	echo Building problem.pdf
 	mkdir -p build/problem/
 	cp -f problem.tex build/problem/
-	if [[ ! -e build/problem/.template ]]; then \
+	if [ ! -e build/problem/.template ]; then \
 		ln -s ../../.template build/problem/.template; \
 	fi
 	cd build/problem; latexmk -quiet -pdf -interaction=nonstopmode problem > ../tex.log
