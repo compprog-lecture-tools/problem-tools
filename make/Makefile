@@ -4,21 +4,24 @@ TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
 PROBLEM_ID=$(shell basename $$PWD)
 
 find_program = $(if $(wildcard executables/$(1).cpp),executables/$(1).cpp,$(if $(wildcard executables/$(1).py),executables/$(1).py,))
+has_marker = $(findstring $(1).cpp,$(2))$(findstring $(1).py,$(2))
+
 GENERATOR = $(call find_program,generator)
 SOLUTION = $(call find_program,solution)
 VALIDATOR = $(call find_program,validator)
 ALL_SOLUTIONS=$(wildcard executables/solution*.cpp) $(wildcard executables/solution*.py)
 
-NON_SLOW_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(findstring slow,$(basename $(s))),,$(s)))
-CORRECT_SOLUTIONS=$(foreach s,$(NON_SLOW_SOLUTIONS),$(if $(findstring wrong,$(basename $(s))),,$(s)))
-SLOW_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(findstring slow,$(basename $(s))),$(s),))
-WRONG_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(findstring wrong,$(basename $(s))),$(s),))
+TLE_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,tle,$(s)),$(s),))
+WA_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,wa,$(s)),$(s),))
+NON_TLE_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,tle,$(s)),,$(s)))
+AC_SOLUTIONS=$(foreach s,$(NON_TLE_SOLUTIONS),$(if $(call has_marker,wa,$(s)),,$(s)))
+
 ifeq ($(strip $(VALIDATOR)),)
-CHECK_SOLUTIONS=$(filter-out $(SOLUTION),$(NON_SLOW_SOLUTIONS))
+CHECK_SOLUTIONS=$(filter-out $(SOLUTION),$(NON_TLE_SOLUTIONS))
 else
 # If we have a validator, run the main solutions output through it as well
 # when running `make check-all`
-CHECK_SOLUTIONS=$(NON_SLOW_SOLUTIONS)
+CHECK_SOLUTIONS=$(NON_TLE_SOLUTIONS)
 endif
 
 NOTES_PDF=build/$(PROBLEM_ID)-notes.pdf
@@ -76,14 +79,14 @@ check-all: $(patsubst executables/%,check-%,$(CHECK_SOLUTIONS))
 time-%: build/builds/%/run build/testcases/testcases-stamp
 	$(TOOLS_MAKE_DIR)/time.sh build/builds/$*/run
 
-time-all: $(patsubst executables/%,time-%,$(NON_SLOW_SOLUTIONS))
+time-all: $(patsubst executables/%,time-%,$(NON_TLE_SOLUTIONS))
 
 time: time-$(notdir $(SOLUTION))
 
 time-full-%: build/builds/%/run build/testcases/testcases-stamp
 	FULL=1 $(TOOLS_MAKE_DIR)/time.sh build/builds/$*/run
 
-time-full-all: $(patsubst executables/%,time-full-%,$(NON_SLOW_SOLUTIONS))
+time-full-all: $(patsubst executables/%,time-full-%,$(NON_TLE_SOLUTIONS))
 
 time-full: time-full-$(notdir $(SOLUTION))
 # }}}
@@ -151,13 +154,13 @@ build/$(PROBLEM_ID).zip: build/testcases/answers-stamp build/problem/problem.pdf
 	mkdir -p build/judge-package/submissions/accepted
 	mkdir -p build/judge-package/submissions/wrong_answer
 	mkdir -p build/judge-package/submissions/time_limit_exceeded
-	for f in $(CORRECT_SOLUTIONS); do \
+	for f in $(AC_SOLUTIONS); do \
 		cp $$f build/judge-package/submissions/accepted; \
 	done
-	for f in $(SLOW_SOLUTIONS); do \
+	for f in $(TLE_SOLUTIONS); do \
 		cp $$f build/judge-package/submissions/time_limit_exceeded; \
 	done
-	for f in $(WRONG_SOLUTIONS); do \
+	for f in $(WA_SOLUTIONS); do \
 		cp $$f build/judge-package/submissions/wrong_answer; \
 	done
 ifneq ($(strip $(VALIDATOR)),)

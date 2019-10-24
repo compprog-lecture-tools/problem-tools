@@ -40,7 +40,7 @@ if [[ $CRASH != 0 ]]; then
     sed 's/^/    /' < "$CRASH_MSG_FILE" >&2
     exit 2
 fi
-if [[ "$2" =~ wrong ]]; then
+if [[ "$2" == *.wa.cpp ]] || [[ "$2" == *.wa.py ]]; then
     if [[ ! -s "$WRONG_MSG_FILE" ]]; then
         echo "No test case failed!" >&2
         exit 1
