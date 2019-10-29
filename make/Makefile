@@ -2,6 +2,7 @@
 REPO_ROOT=$(shell git rev-parse --show-toplevel)
 TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
 PROBLEM_ID=$(shell basename $$PWD)
+TIMELIMIT=$(shell grep -o "^timelimit=\S*" domjudge-problem.ini | sed 's/timelimit=//')
 
 find_program = $(if $(wildcard executables/$(1).cpp),executables/$(1).cpp,$(if $(wildcard executables/$(1).py),executables/$(1).py,))
 has_marker = $(findstring $(1).cpp,$(2))$(findstring $(1).py,$(2))
@@ -15,14 +16,6 @@ TLE_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,tle,$(s)),$(s)
 WA_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,wa,$(s)),$(s),))
 NON_TLE_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,tle,$(s)),,$(s)))
 AC_SOLUTIONS=$(foreach s,$(NON_TLE_SOLUTIONS),$(if $(call has_marker,wa,$(s)),,$(s)))
-
-ifeq ($(strip $(VALIDATOR)),)
-CHECK_SOLUTIONS=$(filter-out $(SOLUTION),$(NON_TLE_SOLUTIONS))
-else
-# If we have a validator, run the main solutions output through it as well
-# when running `make check-all`
-CHECK_SOLUTIONS=$(NON_TLE_SOLUTIONS)
-endif
 
 NOTES_PDF=build/$(PROBLEM_ID)-notes.pdf
 GENERATOR_RUN=$(patsubst executables/%,build/builds/%/run,$(GENERATOR))
@@ -46,6 +39,12 @@ build/builds/%.cpp/run: executables/%.cpp $(wildcard executables/*.h) $(wildcard
 	cd $(dir $@); $(TOOLS_MAKE_DIR)/build-cpp.sh ../../../executables/$*.cpp
 
 .SECONDARY:
+build/builds/debug/%.cpp/run: executables/%.cpp $(wildcard executables/*.h) $(wildcard executables/*.hpp)
+	echo Building $*.cpp in debug mode
+	mkdir -p $(dir $@)
+	cd $(dir $@); DEBUG=1 $(TOOLS_MAKE_DIR)/build-cpp.sh ../../../../executables/$*.cpp
+
+.SECONDARY:
 build/builds/%.py/run: executables/%.py
 	echo Building $*.py
 	mkdir -p $(dir $@)
@@ -53,6 +52,11 @@ build/builds/%.py/run: executables/%.py
 		echo "#!/bin/sh" > run; \
 		echo 'exec python3 "$(realpath executables/$*.py)" "$$@"' >> run; \
 		chmod +x run
+
+.SECONDARY:
+build/builds/debug/%.py/run: executables/%.py
+	# Don't do anything
+	;
 
 .SECONDARY:
 build/validator/run: $(VALIDATOR_RUN)
@@ -69,9 +73,17 @@ endif
 check-%: build/builds/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
 	echo Checking $*
 	mkdir -p build/validator
-	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run $* build/validator/run build/testcases build/validator
+	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run '' $* build/validator/run build/testcases build/validator $(TIMELIMIT)
 
-check-all: $(patsubst executables/%,check-%,$(CHECK_SOLUTIONS))
+check-full-%: build/builds/%/run build/builds/debug/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
+	echo 'Checking $* (full)'
+	mkdir -p build/validator
+	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run build/builds/debug/$*/run $* build/validator/run build/testcases build/validator $(TIMELIMIT)
+
+# Check all solutions so that the main solutions gets run with sanitizers enabled
+check-all: $(patsubst executables/%,check-%,$(ALL_SOLUTIONS))
+
+check-full-all: $(patsubst executables/%,check-full-%,$(ALL_SOLUTIONS))
 # }}}
 
 

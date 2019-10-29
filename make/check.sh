@@ -1,54 +1,101 @@
 #!/usr/bin/env bash
-# Usage: ./check.sh solution_executable solution_name validator_executable testcases_dir temp_dir
+# Usage: ./check.sh solution_executable solution_debug_executable solution_name validator_executable testcases_dir temp_dir timelimit
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
-TEMP_DIR="$5/$2"
+EXECUTABLE="$1"
+DEBUG_EXECUTABLE="$2"
+SOLUTION_NAME="$3"
+VALIDATOR="$4"
+TESTCASES_DIR="$5"
+MAIN_TEMP_DIR="$6"
+TIMELIMIT="$7"
+
+TYPE='ac'
+if [[ "$SOLUTION_NAME" == *.wa.cpp ]] || [[ "$SOLUTION_NAME" == *.wa.py ]]; then
+  TYPE='wa'
+elif [[ "$SOLUTION_NAME" == *.tle.cpp ]] || [[ "$SOLUTION_NAME" == *.tle.py ]]; then
+  TYPE='tle'
+fi
+
+TEMP_DIR="$MAIN_TEMP_DIR/$SOLUTION_NAME"
 mkdir -p "$TEMP_DIR"
 
-CRASH=0
-WRONG_MSG_FILE="$TEMP_DIR/wrong_msg"
-CRASH_MSG_FILE="$TEMP_DIR/crash_msg"
-rm -f "$WRONG_MSG_FILE"
-rm -f "$CRASH_MSG_FILE"
+EARLY_EXIT_CODE=0
+STDOUT_FILE="$TEMP_DIR/stdout"
+STDERR_FILE="$TEMP_DIR/stderr"
+rm -f "$STDOUT_FILE" "$STDERR_FILE"
+touch "$STDOUT_FILE" "$STDERR_FILE"
 
-if [[ -x $(command -v parallel) ]]; then
-    find "$4" \
-         -maxdepth 1 \
-         -type f \
-         -name '*.in' \
-    | parallel --halt now,fail=1 \
-               "$SCRIPT_DIR/check-single.sh" \
-               "$1" \
-               "$3" \
-               '{}' \
-               "$TEMP_DIR/feedback-{%} >> '$WRONG_MSG_FILE' 2>> '$CRASH_MSG_FILE'"
-    CRASH="$?"
-else
+HAS_PARALLEL=1
+if [[ ! -x $(command -v parallel) ]]; then
     echo "Install GNU parallel for faster checking of solutions"
-    for f in "$4"/*.in; do
-        if ! "$SCRIPT_DIR/check-single.sh" "$1" "$3" "$f" "$TEMP_DIR/feedback" >> "$WRONG_MSG_FILE" 2>> "$CRASH_MSG_FILE"; then
-            CRASH=1
-            break
-        fi
-    done
+    HAS_PARALLEL=0
 fi
 
-if [[ $CRASH != 0 ]]; then
-    echo "Validator crashed:" >&2
-    # Indent output using sed
-    sed 's/^/    /' < "$CRASH_MSG_FILE" >&2
-    exit 2
-fi
-if [[ "$2" == *.wa.cpp ]] || [[ "$2" == *.wa.py ]]; then
-    if [[ ! -s "$WRONG_MSG_FILE" ]]; then
-        echo "No test case failed!" >&2
-        exit 1
+check_executable() {
+    if [[ $HAS_PARALLEL -eq 1 ]]; then
+        find "$TESTCASES_DIR" \
+             -maxdepth 1 \
+             -type f \
+             -name '*.in' \
+        | parallel --halt now,fail=1 \
+                   "$SCRIPT_DIR/check-$TYPE.sh" \
+                   "$1" \
+                   "$VALIDATOR" \
+                   '{}' \
+                   "$TEMP_DIR/feedback-{%}" \
+                   "$TIMELIMIT >> '$STDOUT_FILE' 2>> '$STDERR_FILE'" \
+                   2> /dev/null  # Silences the 'this job failed' message
+        EARLY_EXIT_CODE="$?"
+    else
+        for f in "$TESTCASES_DIR"/*.in; do
+            "$SCRIPT_DIR/check-$TYPE.sh" "$1" "$VALIDATOR" "$f" "$TEMP_DIR/feedback" "$TIMELIMIT" >> "$STDOUT_FILE" 2>> "$STDERR_FILE"
+            EARLY_EXIT_CODE="$?"
+            if [[ $EARLY_EXIT_CODE -ne 0 ]]; then
+                break
+            fi
+        done
     fi
-else
-    if [[ -s "$WRONG_MSG_FILE" ]]; then
-        echo "Testcases failed:" >&2
-        sed 's/^/    /' < "$WRONG_MSG_FILE" >&2
-        exit 1
-    fi
+}
+
+# For AC solutions, also run every testcase through the debug executable that
+# has sanitizers enabled
+check_executable "$EXECUTABLE"
+# For python solutions there is no need for a debug run, so we check if the
+# executable actually exists
+if [[ -f $DEBUG_EXECUTABLE ]] && [[ $TYPE == 'ac' ]] && [[ $EARLY_EXIT_CODE -eq 0 ]]; then
+    echo '  Checking debug build'
+    check_executable "$DEBUG_EXECUTABLE"
 fi
+
+# The check-* scripts use exit code 1 to report a validator or AC solution
+# crashing
+if [[ $EARLY_EXIT_CODE -eq 1 ]]; then
+    cat "$STDERR_FILE" >&2
+    exit 1
+fi
+
+# check-wa.sh and check-tle.sh use exit code 2 to early exit when a
+# failing/slow testcase was found.
+# If every check-*.sh call returned exit code 0, then no such testcase was
+# found and the solution is not actually WA/TLE
+if [[ $TYPE == 'wa' ]] && [[ $EARLY_EXIT_CODE -eq 0 ]]; then
+    echo 'No testcase failed!' >&2
+    exit 1
+fi
+if [[ $TYPE == 'tle' ]] && [[ $EARLY_EXIT_CODE -eq 0 ]]; then
+    echo 'No testcase was slow!' >&2
+    exit 1
+fi
+
+# For AC solutions, we want to find all failing testcases
+# Thus, even if EARLY_EXIT_CODE=0, we need to check if STDOUT_FILE
+# contains messages about failing testcases
+if [[ $TYPE == 'ac' ]] && [[ -s "$STDOUT_FILE" ]]; then
+    cat "$STDOUT_FILE" >&2
+    exit 1
+fi
+
+# Nothing failed
+exit 0

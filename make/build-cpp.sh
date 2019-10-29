@@ -24,9 +24,12 @@ find_cxx_compiler() {
     fi
 }
 
-CXX_FLAGS="-Wall -Wextra -Wpedantic -Wno-sign-compare -std=c++17 -I$(dirname "$1")"
+WARNING_FLAGS="-Wall -Wextra -pedantic -Wshadow -Wformat=2 -Wfloat-equal -Wconversion -Wno-sign-conversion -Wno-sign-compare"
+SANITIZER_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=undefined"
+COMMON_FLAGS="-std=c++17 -I$(dirname "$1")"
 if [[ -n $DEBUG ]]; then
-    "$(find_cxx_compiler)" -o run -g -fsanitize=undefined $CXX_FLAGS "$1"
+    # Suppress warnings so we only get them once
+    "$(find_cxx_compiler)" -o run -g -w $SANITIZER_FLAGS $COMMON_FLAGS "$1"
 else
-    "$(find_cxx_compiler)" -o run -O2 $CXX_FLAGS "$1"
+    "$(find_cxx_compiler)" -o run -O2 $WARNING_FLAGS $COMMON_FLAGS "$1"
 fi
