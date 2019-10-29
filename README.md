@@ -3,6 +3,23 @@
 Tools to develop and build competitive programming problems.
 Should be included as a submodule in problem repositories.
 
+## Overview
+
+In repositories using these tools, problems will be grouped by course and by contest.
+Courses are top-level directories, and also contain templates for the problem statements and solution notes.
+Contests then are directories in a course directory and contain problem directories.
+
+Each problem consist of:
+
+  * a problem statement written in latex
+  * a testcase generator
+  * one or more solutions, including intentionally wrong or slow ones
+  * (optional) a validator to check submission output for correctness
+  * solution notes created in Ipe
+  * a `domjudge-problem.ini` containing some metadata
+
+All of the executables are grouped in a `executables` directory, and can be written in either C++17 or Python 3.
+
 ## Requirements
 
 To use these tools, you will need:
@@ -12,12 +29,13 @@ To use these tools, you will need:
   * GCC 8.1 or newer (on macOS, you will need to install this using homebrew, the builtin `g++` program links to clang). See the faq entry below for g++ vs. clang.
   * Latex including `latexmk` (already included with most latex setups)
   * Ipe (the `ipetoipe` program should be available in your `PATH`)
-  * (optional) GNU parallel to speed up some scripts
+  * (optional) GNU `parallel` to speed up some scripts
 
 For some helper scripts you will also need `pdfjoin` and `pdfinfo`.
 Lastly, if you want to run a local judge setup for testing, you will also need the requirements listed in [local-judge/README.md](local-judge/README.md).
 
 ## FAQ
+
   * *Why do I need g++ instead of clang?*
     Clang's standard library does not implement `ios_base::sync_with_stdio`, which means that IO will be significantly slower.
     This makes it much harder to compare local runtime with runtime on the judge.
