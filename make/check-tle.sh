@@ -9,6 +9,13 @@ IN_FILE="$3"
 TEMP_DIR="$4"
 TIMELIMIT="$5"
 
+# Read timefactor file
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+TIMEFACTOR=1.0
+if [[ -f $REPO_ROOT/timefactor ]]; then
+    TIMEFACTOR="$(cat "$REPO_ROOT/timefactor")"
+fi
+
 rm -rf "$TEMP_DIR"
 mkdir -p "$TEMP_DIR"
 
@@ -21,7 +28,7 @@ fi
 # We use time to measure the actual runtime, and GNU timeout to avoid
 # solutions running indefinitely. Because GNU timeout is quite inaccurate,
 # so we pass it double the checked timelimit
-CHECKED_TIMELIMIT="$(bc -l <<< "$TIMELIMIT * 1.5")"
+CHECKED_TIMELIMIT="$(bc -l <<< "$TIMELIMIT * $TIMEFACTOR * 1.5")"
 TIMEOUT="$(bc -l <<< "$CHECKED_TIMELIMIT * 2")"
 
 # Use `time timeout ...` instead of `timeout time ...` s.t. bash's time gets

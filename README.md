@@ -52,3 +52,4 @@ To setup a new problem repository, create an empty git repo and then, from its r
     ```bash
     ln -s ./tools/setup-problem.py setup-problem.py
     ```
+  * Add `/timefactor` and `/login.toml` to your repos `.gitignore`
