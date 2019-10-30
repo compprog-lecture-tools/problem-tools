@@ -14,7 +14,7 @@ def exit_error(message):
 
 
 def get_login_entries():
-    path = Path(__file__).resolve().parents[1] / 'login.toml'
+    path = Path(__file__).resolve().parents[2] / 'login.toml'
     try:
         with open(path, 'r') as f:
             return toml.load(f)
