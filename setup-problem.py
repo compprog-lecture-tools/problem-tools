@@ -115,9 +115,13 @@ def main():
     if prompt_single('confirm', message='Add validator', default=False):
         validator_lang = prompt_language('Validator language')
 
-    submission_date = prompt_submission_date()
-    submission_time = prompt_single('input', message='Submission time',
-                                    default='13:30')
+    if prompt_single('confirm', message='Is live contest?', default=False):
+        submission_date = 'end of'
+        submission_time = 'contest'
+    else:
+        submission_date = prompt_submission_date()
+        submission_time = prompt_single('input', message='Submission time',
+                                        default='13:30')
     timelimit = prompt_single('input', message='Timelimit', default='1.0')
 
     jinja_env = setup_jinja_env(repo_root, course_dir)
