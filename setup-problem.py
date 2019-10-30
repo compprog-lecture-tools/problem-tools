@@ -82,6 +82,12 @@ def setup_executable(name, language, executables_dir, jinja_env, **kwargs):
                     executables_dir / file_name, **kwargs)
 
 
+def validate_problem_id(problem_id):
+    if 1 <= len(problem_id) <= 10:
+        return True
+    return 'Problem id should be at most 10 characters long'
+
+
 def main():
     repo_root = Path(
         subprocess.check_output(GIT_REPO_ROOT_CMD).rstrip().decode('utf-8'))
@@ -107,7 +113,8 @@ def main():
     else:
         print(f'Using contest directory {contest_dir.name}')
 
-    problem_id = prompt_single('input', message='Problem id')
+    problem_id = prompt_single('input', message='Problem id',
+                               validate=validate_problem_id)
     problem_name = to_problem_name(problem_id)
     solution_lang = prompt_language('Solution language')
     generator_lang = prompt_language('Generator language')
