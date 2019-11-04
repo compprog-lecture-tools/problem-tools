@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-# Usage: ./check.sh solution_executable solution_debug_executable solution_name validator_executable testcases_dir temp_dir timelimit
+# Usage: ./check.sh solution_executable solution_debug_executable solution_name validator_dir testcases_dir timelimit
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 EXECUTABLE="$1"
 DEBUG_EXECUTABLE="$2"
 SOLUTION_NAME="$3"
-VALIDATOR="$4"
+VALIDATOR_DIR="$4"
 TESTCASES_DIR="$5"
-MAIN_TEMP_DIR="$6"
-TIMELIMIT="$7"
+TIMELIMIT="$6"
 
 TYPE='ac'
 if [[ "$SOLUTION_NAME" == *.wa.cpp ]] || [[ "$SOLUTION_NAME" == *.wa.py ]]; then
@@ -18,9 +17,10 @@ elif [[ "$SOLUTION_NAME" == *.tle.cpp ]] || [[ "$SOLUTION_NAME" == *.tle.py ]]; 
   TYPE='tle'
 fi
 
-TEMP_DIR="$MAIN_TEMP_DIR/$SOLUTION_NAME"
+TEMP_DIR="$VALIDATOR_DIR/$SOLUTION_NAME"
 mkdir -p "$TEMP_DIR"
 
+VALIDATOR="$VALIDATOR_DIR/run"
 EARLY_EXIT_CODE=0
 STDOUT_FILE="$TEMP_DIR/stdout"
 STDERR_FILE="$TEMP_DIR/stderr"

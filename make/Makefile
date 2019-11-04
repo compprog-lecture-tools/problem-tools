@@ -73,12 +73,12 @@ endif
 check-%: build/builds/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
 	echo Checking $*
 	mkdir -p build/validator
-	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run '' $* build/validator/run build/testcases build/validator $(TIMELIMIT)
+	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run '' $* build/validator build/testcases $(TIMELIMIT)
 
 check-full-%: build/builds/%/run build/builds/debug/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
 	echo 'Checking $* (full)'
 	mkdir -p build/validator
-	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run build/builds/debug/$*/run $* build/validator/run build/testcases build/validator $(TIMELIMIT)
+	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run build/builds/debug/$*/run $* build/validator build/testcases $(TIMELIMIT)
 
 # Check all solutions so that the main solutions gets run with sanitizers enabled
 check-all: $(patsubst executables/%,check-%,$(ALL_SOLUTIONS))
