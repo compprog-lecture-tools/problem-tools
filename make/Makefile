@@ -34,23 +34,23 @@ endif
 # Building {{{
 .SECONDARY:
 build/builds/%.cpp/run: executables/%.cpp $(wildcard executables/*.h) $(wildcard executables/*.hpp)
-	echo Building $*.cpp
-	mkdir -p $(dir $@)
-	cd $(dir $@); $(TOOLS_MAKE_DIR)/build-cpp.sh ../../../executables/$*.cpp
+	echo 'Building $*.cpp'
+	mkdir -p '$(dir $@)'
+	cd '$(dir $@)'; '$(TOOLS_MAKE_DIR)/build-cpp.sh' '../../../executables/$*.cpp'
 
 .SECONDARY:
 build/builds/debug/%.cpp/run: executables/%.cpp $(wildcard executables/*.h) $(wildcard executables/*.hpp)
-	echo Building $*.cpp in debug mode
-	mkdir -p $(dir $@)
-	cd $(dir $@); DEBUG=1 $(TOOLS_MAKE_DIR)/build-cpp.sh ../../../../executables/$*.cpp
+	echo 'Building $*.cpp in debug mode'
+	mkdir -p '$(dir $@)'
+	cd '$(dir $@)'; DEBUG=1 '$(TOOLS_MAKE_DIR)/build-cpp.sh' '../../../../executables/$*.cpp'
 
 .SECONDARY:
 build/builds/%.py/run: executables/%.py
-	echo Building $*.py
-	mkdir -p $(dir $@)
-	cd $(dir $@); \
-		echo "#!/bin/sh" > run; \
-		echo 'exec python3 "$(realpath executables/$*.py)" "$$@"' >> run; \
+	echo 'Building $*.py'
+	mkdir -p '$(dir $@)'
+	cd '$(dir $@)'; \
+		echo '#!/bin/sh' > run; \
+		echo 'exec python3 '$(realpath executables/$*.py)' "$$@"' >> run; \
 		chmod +x run
 
 .SECONDARY:
@@ -60,25 +60,25 @@ build/builds/debug/%.py/run: executables/%.py
 
 .SECONDARY:
 build/validator/run: $(VALIDATOR_RUN)
-	mkdir -p $(dir $@)
+	mkdir -p '$(dir $@)'
 ifeq ($(strip $(VALIDATOR)),)
-	cd $(dir $@); $(TOOLS_MAKE_DIR)/build-cpp.sh $(TOOLS_MAKE_DIR)/validator/default-validator.cpp
+	cd '$(dir $@)'; '$(TOOLS_MAKE_DIR)/build-cpp.sh' '$(TOOLS_MAKE_DIR)/validator/default-validator.cpp'
 else
-	ln -sf $(realpath $(VALIDATOR_RUN)) $@
+	ln -sf '$(realpath $(VALIDATOR_RUN))' '$@'
 endif
 # }}}
 
 
 # Checking {{{
 check-%: build/builds/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
-	echo Checking $*
+	echo 'Checking $*'
 	mkdir -p build/validator
-	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run '' $* build/validator build/testcases $(TIMELIMIT)
+	'$(TOOLS_MAKE_DIR)/check.sh' 'build/builds/$*/run' '' '$*' build/validator build/testcases '$(TIMELIMIT)'
 
 check-full-%: build/builds/%/run build/builds/debug/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
 	echo 'Checking $* (full)'
 	mkdir -p build/validator
-	$(TOOLS_MAKE_DIR)/check.sh build/builds/$*/run build/builds/debug/$*/run $* build/validator build/testcases $(TIMELIMIT)
+	'$(TOOLS_MAKE_DIR)/check.sh' 'build/builds/$*/run' 'build/builds/debug/$*/run' '$*' build/validator build/testcases '$(TIMELIMIT)'
 
 # Check all solutions so that the main solutions gets run with sanitizers enabled
 check-all: $(patsubst executables/%,check-%,$(ALL_SOLUTIONS))
@@ -89,14 +89,14 @@ check-full-all: $(patsubst executables/%,check-full-%,$(ALL_SOLUTIONS))
 
 # Timing {{{
 time-%: build/builds/%/run build/testcases/testcases-stamp
-	$(TOOLS_MAKE_DIR)/time.sh build/builds/$*/run
+	'$(TOOLS_MAKE_DIR)/time.sh' 'build/builds/$*/run'
 
 time-all: $(patsubst executables/%,time-%,$(NON_TLE_SOLUTIONS))
 
 time: time-$(notdir $(SOLUTION))
 
 time-full-%: build/builds/%/run build/testcases/testcases-stamp
-	FULL=1 $(TOOLS_MAKE_DIR)/time.sh build/builds/$*/run
+	FULL=1 '$(TOOLS_MAKE_DIR)/time.sh' 'build/builds/$*/run'
 
 time-full-all: $(patsubst executables/%,time-full-%,$(NON_TLE_SOLUTIONS))
 
@@ -127,20 +127,20 @@ build/testcases/testcases-stamp: $(GENERATOR_RUN)
 	echo Generating testcases
 	rm -rf build/testcases
 	mkdir -p build/testcases
-	cd build/testcases; $(realpath $(GENERATOR_RUN))
+	cd build/testcases; '$(realpath $(GENERATOR_RUN))'
 	touch build/testcases/testcases-stamp
 # }}}
 
 
 # {{{ Generating answers
 build/testcases/%.ans: build/testcases/%.in $(SOLUTION_RUN) build/testcases/testcases-stamp
-	$(SOLUTION_RUN) < $< > $@
+	'$(SOLUTION_RUN)' < $< > $@
 
 build/testcases/answers-stamp: build/testcases/testcases-stamp $(SOLUTION_RUN)
 	echo Generating answers
 	TESTCASES=$$(find build/testcases/ -name *.in | sed 's/\.in/\.ans/g'); \
 	if [ -n "$$TESTCASES" ]; then \
-		$(MAKE) $$TESTCASES; \
+		'$(MAKE)' $$TESTCASES; \
 	fi
 	touch build/testcases/answers-stamp
 	touch build/testcases/sample-answers-stamp
@@ -149,7 +149,7 @@ build/testcases/sample-answers-stamp: build/testcases/testcases-stamp $(SOLUTION
 	echo Generating sample answers
 	TESTCASES=$$(find build/testcases/ -name sample*.in | sed 's/\.in/\.ans/g'); \
 	if [ -n "$$TESTCASES" ]; then \
-		$(MAKE) $$TESTCASES; \
+		'$(MAKE)' $$TESTCASES; \
 	fi
 	touch build/testcases/sample-answers-stamp
 # }}}
@@ -159,7 +159,7 @@ build/testcases/sample-answers-stamp: build/testcases/testcases-stamp $(SOLUTION
 build/$(PROBLEM_ID).zip: build/testcases/answers-stamp build/problem/problem.pdf \
 	                     domjudge-problem.ini $(wildcard executables/solution*.cpp) \
 						 $(wildcard executables/solution*.py)
-	echo Packing $(notdir $@)
+	echo 'Packing $(notdir $@)'
 	rm -rf build/judge-package
 	mkdir -p build/judge-package/data/sample
 	mkdir -p build/judge-package/data/secret
@@ -167,24 +167,24 @@ build/$(PROBLEM_ID).zip: build/testcases/answers-stamp build/problem/problem.pdf
 	mkdir -p build/judge-package/submissions/wrong_answer
 	mkdir -p build/judge-package/submissions/time_limit_exceeded
 	for f in $(AC_SOLUTIONS); do \
-		cp $$f build/judge-package/submissions/accepted; \
+		cp "$$f" build/judge-package/submissions/accepted; \
 	done
 	for f in $(TLE_SOLUTIONS); do \
-		cp $$f build/judge-package/submissions/time_limit_exceeded; \
+		cp "$$f" build/judge-package/submissions/time_limit_exceeded; \
 	done
 	for f in $(WA_SOLUTIONS); do \
-		cp $$f build/judge-package/submissions/wrong_answer; \
+		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
 ifneq ($(strip $(VALIDATOR)),)
-	for f in $(TOOLS_MAKE_DIR)/wrong-validator-solutions/*; do \
-		cp $$f build/judge-package/submissions/wrong_answer; \
+	for f in '$(TOOLS_MAKE_DIR)'/wrong-validator-solutions/*; do \
+		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
 endif
 	for f in $$(find build/testcases/ -name 'sample*' '(' -name '*.in' -or -name '*.ans' -or -name '*.desc' ')'); do \
-		cp $$f build/judge-package/data/sample; \
+		cp "$$f" build/judge-package/data/sample; \
 	done
 	for f in $$(find build/testcases/ -not -name 'sample*' '(' -name '*.in' -or -name '*.ans' -or -name '*.desc' ')'); do \
-		cp $$f build/judge-package/data/secret; \
+		cp "$$f" build/judge-package/data/secret; \
 	done
 	cp build/problem/problem.pdf domjudge-problem.ini build/judge-package
 	cd build/judge-package; zip -q -r ../judge-package-temp.zip ./*
@@ -192,21 +192,21 @@ endif
 
 ifneq ($(strip $(VALIDATOR)),)
 build/$(PROBLEM_ID)-validator.zip: $(VALIDATOR) $(if $(find cpp,$(suffix $(VALIDATOR))),$(wildcard executables/*.h) $(wildcard executables/*.hpp),)
-	echo Packing $(notdir $@)
+	echo 'Packing $(notdir $@)'
 	rm -rf build/validator-package
 	mkdir -p build/validator-package
-	cd build/validator-package; $(TOOLS_MAKE_DIR)/validator/assemble.sh $(realpath $(VALIDATOR)) $(PROBLEM_ID)
+	cd build/validator-package; '$(TOOLS_MAKE_DIR)/validator/assemble.sh' '$(realpath $(VALIDATOR))' '$(PROBLEM_ID)'
 	cd build/validator-package; zip -q -r ../validator-temp.zip ./*
-	mv build/validator-temp.zip $@
+	mv build/validator-temp.zip '$@'
 endif
 # }}}
 
 
 # {{{ Ipe building
 $(NOTES_PDF): notes.ipe
-	echo Generating $(notdir $(NOTES_PDF))
+	echo 'Generating $(notdir $(NOTES_PDF))'
 	mkdir -p build
-	ipetoipe -pdf -export notes.ipe $@ 2> /dev/null
+	ipetoipe -pdf -export notes.ipe '$@' 2> /dev/null
 # }}}
 
 
@@ -218,7 +218,7 @@ clean:
 .PHONY: upload
 upload: build/$(PROBLEM_ID).zip $(if $(VALIDATOR),build/$(PROBLEM_ID)-validator.zip)
 	echo Uploading archive
-	$(TOOLS_MAKE_DIR)/upload.py build/$(PROBLEM_ID).zip $(if $(VALIDATOR),build/$(PROBLEM_ID)-validator.zip)
+	'$(TOOLS_MAKE_DIR)/upload.py' 'build/$(PROBLEM_ID).zip' $(if $(VALIDATOR),'build/$(PROBLEM_ID)-validator.zip')
 
 .PHONY: check-notes
 check-notes:
