@@ -176,7 +176,7 @@ build/$(PROBLEM_ID).zip: build/testcases/answers-stamp build/problem/problem.pdf
 		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
 ifneq ($(strip $(VALIDATOR)),)
-	for f in '$(TOOLS_MAKE_DIR)'/wrong-validator-solutions/*; do \
+	for f in '$(TOOLS_MAKE_DIR)'/wa-validator-solutions/*; do \
 		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
 endif
