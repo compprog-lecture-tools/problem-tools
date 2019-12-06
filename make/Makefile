@@ -56,7 +56,7 @@ build/builds/%.py/run: executables/%.py
 .SECONDARY:
 build/builds/debug/%.py/run: executables/%.py
 	# Don't do anything
-	;
+	true
 
 .SECONDARY:
 build/validator/run: $(VALIDATOR_RUN)
