@@ -11,7 +11,7 @@ Contests then are directories in a course directory and contain problem director
 
 Each problem consist of:
 
-  * a problem statement written in latex
+  * a problem statement written in LaTeX
   * a testcase generator
   * one or more solutions, including intentionally wrong or slow ones
   * (optional) a validator to check submission output for correctness
@@ -33,6 +33,12 @@ To use these tools, you will need:
 
 For some helper scripts you will also need `pdfjoin` and `pdfinfo`.
 Lastly, if you want to run a local judge setup for testing, you will also need the requirements listed in [local-judge/README.md](local-judge/README.md).
+
+## Usage
+
+You interact with these tools through the `setup-problem.py` script in the root folder and through the makefiles in both the contest and problem directories.
+The targets defined by these are described in full detail in [docs/Makefile.md](docs/Makefile.md) and [docs/ContestMakefile.md](docs/ContestMakefile.md) respectively.
+You are encouraged to at least skim through these before working on a problem, as many common problems are already solved by these.
 
 ## FAQ
 
