@@ -89,7 +89,7 @@ def main():
     contests = judges[base_url]['contests']
     contest_name = prompt_choice('Which contest to add to', contests)
     username = judges[base_url]['username']
-    password = judges[base_url]['password']
+    password = judges[base_url].get('password')
     if not password:
         password = PyInquirer.prompt(dict(name='name',
                                           type='password',
