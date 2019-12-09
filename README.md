@@ -37,8 +37,11 @@ Lastly, if you want to run a local judge setup for testing, you will also need t
 ## Usage
 
 You interact with these tools through the `setup-problem.py` script in the root folder and through the makefiles in both the contest and problem directories.
-The targets defined by these are described in full detail in [docs/Makefile.md](docs/Makefile.md) and [docs/ContestMakefile.md](docs/ContestMakefile.md) respectively.
+The targets defined by these are described in full detail in [docs/makefile.md](docs/makefile.md) and [docs/contest-makefile.md](docs/contest-makefile.md) respectively.
 You are encouraged to at least skim through these before working on a problem, as many common problems are already solved by these.
+
+The different parts of a problem listed in [Overview](#overview) are described in more detail in [docs/structure-of-a-problem.md](docs/structure-of-a-problem.md).
+You can read through it while building your first problem.
 
 ## FAQ
 
