@@ -109,7 +109,7 @@ build/problem/metainfo-include.tex: domjudge-problem.ini ..
 	mkdir -p build/problem/
 	printf '\\newcommand{\\problemName}{$(PROBLEM_ID)}\n' > $@
 	printf '\\newcommand{\\problemDir}{../..}\n' >> $@
-	printf '\\newcommand{\\timelimit}{%s}\n' "$$(grep -o "^timelimit=\S*" domjudge-problem.ini | sed 's/timelimit=//')" >> $@
+	printf '\\newcommand{\\timelimit}{%s}\n' "$(TIMELIMIT)" >> $@
 
 build/problem/problem.pdf: problem.tex $(wildcard .template/*) build/testcases/sample-answers-stamp build/problem/metainfo-include.tex
 	echo Building problem.pdf
