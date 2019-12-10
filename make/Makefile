@@ -175,7 +175,7 @@ build/$(PROBLEM_ID).zip: build/testcases/answers-stamp build/problem/problem.pdf
 	for f in $(WA_SOLUTIONS); do \
 		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
-ifneq ($(strip $(VALIDATOR)),)
+ifneq ($(VALIDATOR),)
 	for f in '$(TOOLS_MAKE_DIR)'/wa-validator-solutions/*; do \
 		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
@@ -187,10 +187,18 @@ endif
 		cp "$$f" build/judge-package/data/secret; \
 	done
 	cp build/problem/problem.pdf domjudge-problem.ini build/judge-package
+ifneq ($(VALIDATOR),)
+	# Add special_compare entry to domjudge-problem.ini
+	if grep -q special_compare domjudge-problem.ini; then \
+		echo "Remove special_compare from domjudge-problem.ini, it will be added automatically" >&2; \
+		exit 1; \
+	fi
+	echo "special_compare=$(PROBLEM_ID)-validator" >> build/judge-package/domjudge-problem.ini
+endif
 	cd build/judge-package; zip -q -r ../judge-package-temp.zip ./*
 	mv build/judge-package-temp.zip $@
 
-ifneq ($(strip $(VALIDATOR)),)
+ifneq ($(VALIDATOR),)
 build/$(PROBLEM_ID)-validator.zip: $(VALIDATOR) $(if $(find cpp,$(suffix $(VALIDATOR))),$(wildcard executables/*.h) $(wildcard executables/*.hpp),)
 	echo 'Packing $(notdir $@)'
 	rm -rf build/validator-package

@@ -155,10 +155,7 @@ def main():
     if 'cpp' in (generator_lang, validator_lang):
         (executables_dir / 'testlib.h').symlink_to('../../../../tools/make/testlib.h')
 
-    ini_content = f'timelimit={timelimit}\n'
-    if validator_lang is not None:
-        ini_content += f'special_compare={problem_id}-validator\n'
-    (problem_dir / 'domjudge-problem.ini').write_text(ini_content)
+    (problem_dir / 'domjudge-problem.ini').write_text(f'timelimit={timelimit}\n')
     (problem_dir / 'Makefile').symlink_to('../../../tools/make/Makefile')
 
 
