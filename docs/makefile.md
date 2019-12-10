@@ -66,7 +66,7 @@ If you ever want to see exactly what the makefile is doing, you can pass `VERBOS
  * **`time`**: Time the primary solution
  * **`time-full`**: Time the primary solution for every testcase
  * **`time-all`**: Time all non-TLE solutions
- * **`time-full-all`**: Time all solutions non-TLE solutions
+ * **`time-full-all`**: Time all non-TLE solutions for every testcase
 
 ### Internal
 
@@ -76,7 +76,7 @@ They refer directly to the file that is created as result of the target.
  * **`build/builds/<SOLUTION>/run`**: Build an executable for running `<SOLUTION>`. For Python scripts, this generates a wrapper shell script.
  * **`build/builds/<SOLUTION>/debug/run`**: For C++ executables, this builds them with sanitizers enabled. For Python scripts, this build step is a no-op and does not create the `run` file.
  * **`build/validator/run`**: Builds the validator executable. If the problem is not using a custom validator, this builds the default validator.
- * **`build/probljem/metainfo-exclude.tex`**: Builds a latex file containing meta info about the problem (name, timelimit, etc.). These will then be available in the main `problem.tex` as TeX commands.
+ * **`build/problem/metainfo-exclude.tex`**: Builds a latex file containing meta info about the problem (name, timelimit, etc.). These will then be available in the main `problem.tex` as TeX commands.
  * **`build/problem/problem.pdf`**: Builds the problem statement pdf.
  * **`build/testcases/testcases-stamp`**: Generates all testcases. The stamp file is used to avoid rebuilds if nothing has changed.
  * **`build/testcases/<TESTCASE>.ans`**: Generates the answer for `<TESTCASE>` using the primary solution.
