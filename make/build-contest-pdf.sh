@@ -15,7 +15,10 @@ for program in pdfjoin pdfinfo; do
 done
 
 SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
-latexmk -cd -quiet -pdf "$SCRIPT_DIR/almost-blank-page/blank.tex" > /dev/null
+(
+    cd "$SCRIPT_DIR"/almost-blank-page || exit 1
+    latexmk -quiet -pdf blank.tex > /dev/null
+)
 
 PDFJOIN_ARGS=()
 for p in "${@:2}"; do
