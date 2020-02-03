@@ -3939,7 +3939,7 @@ NORETURN void __testlib_help()
 
     std::fprintf(stderr, "Program must be run with the following arguments: \n");
 #ifdef DOMJUDGE
-    std::fprintf(stderr, "    <input-file> <answer-file> <feedback-dir> < <output-file>\n\n");
+    std::fprintf(stderr, "    <input-file> <answer-file> <feedback-dir>\n\n");
 #else
     std::fprintf(stderr, "    <input-file> <output-file> <answer-file> [<report-file> [<-appes>]]\n\n");
 #endif
@@ -4023,6 +4023,20 @@ void registerInteraction(int argc, char* argv[])
     if (argc > 1 && !strcmp("--help", argv[1]))
         __testlib_help();
     
+#ifdef DOMJUDGE
+    if (argc < 4)
+    {
+        quit(_fail, std::string("Program must be run with the following arguments: ") +
+            std::string("<input-file> <answer-file> <feedback-dir>") +
+            "\nUse \"--help\" to get help information");
+    }
+
+    inf.init(argv[1], _input);
+    ouf.init(stdin, _output);
+    ans.init(argv[2], _answer);
+    resultName = argv[3] + std::string("/judgemessage.txt");
+    appesMode = false;
+#else
     if (argc < 3 || argc > 6)
     {
         quit(_fail, std::string("Program must be run with the following arguments: ") +
@@ -4070,6 +4084,7 @@ void registerInteraction(int argc, char* argv[])
         ans.init(argv[3], _answer);
     else
         ans.name = "unopened answer stream";
+#endif
 }
 
 void registerValidation()
@@ -4151,7 +4166,8 @@ void registerTestlibCmd(int argc, char* argv[])
     inf.init(argv[1], _input);
     ouf.init(stdin, _output);
     ans.init(argv[2], _answer);
-    freopen((argv[3] + std::string("/judgemessage.txt")).c_str(), "w", stderr);
+    resultName = argv[3] + std::string("/judgemessage.txt");
+    appesMode = false;
 #else
     if (argc < 4 || argc > 6)
     {
