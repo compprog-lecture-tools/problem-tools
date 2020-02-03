@@ -116,9 +116,18 @@ def main():
     problem_name = to_problem_name(problem_id)
     solution_lang = prompt_language('Solution language')
     generator_lang = prompt_language('Generator language')
+
+    answer_generator_lang = None
+    interactor = False
     validator_lang = None
-    if prompt_single('confirm', message='Add validator', default=False):
+    if prompt_single('confirm', message='Add interactor', default=False):
+        # Interactor implies an answer generator but no validator
+        interactor = True
+        answer_generator_lang = prompt_language('Answer generator language')
+    elif prompt_single('confirm', message='Add validator', default=False):
         validator_lang = prompt_language('Validator language')
+        if prompt_single('confirm', message='Add answer generator'):
+            answer_generator_lang = prompt_language('Answer generator language')
 
     if prompt_single('confirm', message='Is live contest?', default=False):
         submission_date = 'end of'
@@ -150,7 +159,13 @@ def main():
     if validator_lang is not None:
         setup_executable('validator', validator_lang, executables_dir,
                          jinja_env)
-    if 'cpp' in (generator_lang, validator_lang):
+    if answer_generator_lang is not None:
+        setup_executable('answer-generator', answer_generator_lang,
+                         executables_dir, jinja_env)
+    if interactor:
+        setup_executable('interactor', 'cpp', executables_dir, jinja_env)
+
+    if interactor or 'cpp' in (generator_lang, validator_lang):
         (executables_dir / 'testlib.h').symlink_to('../../../../tools/make/testlib.h')
 
     (problem_dir / 'domjudge-problem.ini').write_text(f'timelimit={timelimit}\n')
