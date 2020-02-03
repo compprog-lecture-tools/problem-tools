@@ -15,6 +15,8 @@ Each problem consist of:
   * a testcase generator
   * one or more solutions, including intentionally wrong or slow ones
   * (optional) a validator to check submission output for correctness
+  * (optional) an interactor for interactive problems
+  * (optional) an answer generator if the `.ans` files do not correspond to the solutions output
   * solution notes created in Ipe
   * a `domjudge-problem.ini` containing some metadata
 

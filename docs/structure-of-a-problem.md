@@ -44,7 +44,18 @@ When generating the pdf with `make pdf` or another make command, it gets build i
 This should usually not change anything for you, however, if you include files such as images, your relative paths won't work as expected.
 To fix this, always use the `\problemDir` latex command to refer to the problem directory when including files.
 
-## Validator
+## Answer generator (optional)
+
+Use an answer generator if the `.ans` files should not correspond to the output of the solution.
+This is usually the case when using in interactor, where the interactor writes the output file instead of the solution, or a validator, where the `.ans` file can be anything that helps the validator assess the solutions output.
+
+Answer generators reside in the `executables` directory and are named `answer-generator.{cpp|py}`.
+They work just like solutions in that they should read the `.in` file through stdin and write to stdout.
+
+## Validator (optional)
+
+Use a validator if you want to accept more than a single, unique solution.
+The default validator already ignores extraneous whitespace and even supports matching floats with a given accuracy, so it should be sufficient for most cases.
 
 Validators can currently only be written in C++, and are placed as `validator.cpp` in the `executables` directory.
 As with generators, we use `testlib.h` for many convenience features.
@@ -60,3 +71,9 @@ While `testlib.h` supports many verdicts, we use only four of those:
  * `_fail` indicates an error in the validators logic. Use this as a defensive measure in seemingly impossible cases, such as when a valid solution has a better result than the expected one. When a validator quits with this verdict or otherwise crashes, the problem gets disabled giving you a chance to investigate what happened.
 
 To keep your code concise, remember that you can use `quitf(verdict, format_string, ...)` and `quitif(condition, verdict, format_string, ...)` with printf-style formatting instead of the plain `quit`.
+
+## Interactor (optional)
+
+Use an interactor in an interactive problem, i.e. one where the solution can send queries that are then answered by the interactor.
+
+The implementation of interactors is complex enough to warrant its own document: [interactors.md](interactors.md).
