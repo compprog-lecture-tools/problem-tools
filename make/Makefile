@@ -10,6 +10,8 @@ has_marker = $(findstring $(1).cpp,$(2))$(findstring $(1).py,$(2))
 GENERATOR = $(call find_program,generator)
 SOLUTION = $(call find_program,solution)
 VALIDATOR = $(call find_program,validator)
+ANSWER_GENERATOR = $(call find_program,answer-generator)
+INTERACTOR = $(call find_program,interactor)
 ALL_SOLUTIONS=$(wildcard executables/solution*.cpp) $(wildcard executables/solution*.py)
 
 TLE_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,tle,$(s)),$(s),))
@@ -21,6 +23,21 @@ NOTES_PDF=build/$(PROBLEM_ID)-notes.pdf
 GENERATOR_RUN=$(patsubst executables/%,build/builds/%/run,$(GENERATOR))
 SOLUTION_RUN=$(patsubst executables/%,build/builds/%/run,$(SOLUTION))
 VALIDATOR_RUN=$(patsubst executables/%,build/builds/%/run,$(VALIDATOR))
+ANSWER_GENERATOR_RUN=$(patsubst executables/%,build/builds/%/run,$(ANSWER_GENERATOR))
+
+ANS_GEN_RUN=$(if $(ANSWER_GENERATOR),$(ANSWER_GENERATOR_RUN),$(SOLUTION_RUN))
+
+
+# Sanity checks {{{
+ifneq ($(INTERACTOR),)
+ifneq ($(VALIDATOR),)
+$(error Problem cannot have both a validator and interactor)
+endif
+ifeq ($(ANSWER_GENERATOR),)
+$(error Interactive problems must have an answer generator)
+endif
+endif
+# }}}
 
 
 .PHONY: all
@@ -28,6 +45,15 @@ all: pack $(NOTES_PDF)
 
 ifndef VERBOSE
 .SILENT:
+endif
+
+
+.PHONY: ensure_not_interactive
+ensure_not_interactive:
+ifeq ($(INTERACTOR),)
+	true
+else
+	$(error Checking/timing is not (yet?) supported for interactive problems, please use a local judge)
 endif
 
 
@@ -70,12 +96,12 @@ endif
 
 
 # Checking {{{
-check-%: build/builds/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
+check-%: ensure_not_interactive build/builds/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
 	echo 'Checking $*'
 	mkdir -p build/validator
 	'$(TOOLS_MAKE_DIR)/check.sh' 'build/builds/$*/run' '' '$*' build/validator build/testcases '$(TIMELIMIT)'
 
-check-full-%: build/builds/%/run build/builds/debug/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
+check-full-%: ensure_not_interactive build/builds/%/run build/builds/debug/%/run build/validator/run build/testcases/testcases-stamp build/testcases/answers-stamp
 	echo 'Checking $* (full)'
 	mkdir -p build/validator
 	'$(TOOLS_MAKE_DIR)/check.sh' 'build/builds/$*/run' 'build/builds/debug/$*/run' '$*' build/validator build/testcases '$(TIMELIMIT)'
@@ -88,14 +114,14 @@ check-full-all: $(patsubst executables/%,check-full-%,$(ALL_SOLUTIONS))
 
 
 # Timing {{{
-time-%: build/builds/%/run build/testcases/testcases-stamp
+time-%: ensure_not_interactive build/builds/%/run build/testcases/testcases-stamp
 	'$(TOOLS_MAKE_DIR)/time.sh' 'build/builds/$*/run'
 
 time-all: $(patsubst executables/%,time-%,$(NON_TLE_SOLUTIONS))
 
 time: time-$(notdir $(SOLUTION))
 
-time-full-%: build/builds/%/run build/testcases/testcases-stamp
+time-full-%: ensure_not_interactive build/builds/%/run build/testcases/testcases-stamp
 	FULL=1 '$(TOOLS_MAKE_DIR)/time.sh' 'build/builds/$*/run'
 
 time-full-all: $(patsubst executables/%,time-full-%,$(NON_TLE_SOLUTIONS))
@@ -133,10 +159,10 @@ build/testcases/testcases-stamp: $(GENERATOR_RUN)
 
 
 # {{{ Generating answers
-build/testcases/%.ans: build/testcases/%.in $(SOLUTION_RUN) build/testcases/testcases-stamp
-	'$(SOLUTION_RUN)' < $< > $@
+build/testcases/%.ans: build/testcases/%.in $(ANS_GEN_RUN) build/testcases/testcases-stamp
+	'$(ANS_GEN_RUN)' < $< > $@
 
-build/testcases/answers-stamp: build/testcases/testcases-stamp $(SOLUTION_RUN)
+build/testcases/answers-stamp: build/testcases/testcases-stamp $(ANS_GEN_RUN)
 	echo Generating answers
 	TESTCASES=$$(find build/testcases/ -name *.in | sed 's/\.in/\.ans/g'); \
 	if [ -n "$$TESTCASES" ]; then \
@@ -145,7 +171,7 @@ build/testcases/answers-stamp: build/testcases/testcases-stamp $(SOLUTION_RUN)
 	touch build/testcases/answers-stamp
 	touch build/testcases/sample-answers-stamp
 
-build/testcases/sample-answers-stamp: build/testcases/testcases-stamp $(SOLUTION_RUN)
+build/testcases/sample-answers-stamp: build/testcases/testcases-stamp $(ANS_GEN_RUN)
 	echo Generating sample answers
 	TESTCASES=$$(find build/testcases/ -name sample*.in | sed 's/\.in/\.ans/g'); \
 	if [ -n "$$TESTCASES" ]; then \
@@ -183,6 +209,14 @@ ifneq ($(VALIDATOR),)
 		cp "$$f" build/judge-package/submissions/time_limit_exceeded; \
 	done
 endif
+ifneq ($(INTERACTOR),)
+	for f in '$(TOOLS_MAKE_DIR)'/interactor/solutions/wa/*; do \
+		cp "$$f" build/judge-package/submissions/wrong_answer; \
+	done
+	for f in '$(TOOLS_MAKE_DIR)'/interactor/solutions/tle/*; do \
+		cp "$$f" build/judge-package/submissions/time_limit_exceeded; \
+	done
+endif
 	for f in $$(find build/testcases/ -name 'sample*' '(' -name '*.in' -or -name '*.ans' -or -name '*.desc' ')'); do \
 		cp "$$f" build/judge-package/data/sample; \
 	done
@@ -197,6 +231,13 @@ ifneq ($(VALIDATOR),)
 		exit 1; \
 	fi
 	echo "special_compare=$(PROBLEM_ID)-validator" >> build/judge-package/domjudge-problem.ini
+endif
+ifneq ($(INTERACTOR),)
+	# Combined run and compare can only be specified in problem.yaml and not in domjudge-problem.ini.
+	# Additionally, the interactor must be included in the same zip
+	echo 'validation: custom interactive' > build/judge-package/problem.yaml
+	mkdir build/judge-package/output_validators
+	cd build/judge-package/output_validators; '$(TOOLS_MAKE_DIR)'/interactor/assemble.sh '$(realpath $(INTERACTOR))'
 endif
 	cd build/judge-package; zip -q -r ../judge-package-temp.zip ./*
 	mv build/judge-package-temp.zip $@
