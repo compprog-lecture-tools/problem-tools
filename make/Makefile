@@ -176,8 +176,11 @@ build/$(PROBLEM_ID).zip: build/testcases/answers-stamp build/problem/problem.pdf
 		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
 ifneq ($(VALIDATOR),)
-	for f in '$(TOOLS_MAKE_DIR)'/wa-validator-solutions/*; do \
+	for f in '$(TOOLS_MAKE_DIR)'/validator/solutions/wa/*; do \
 		cp "$$f" build/judge-package/submissions/wrong_answer; \
+	done
+	for f in '$(TOOLS_MAKE_DIR)'/validator/solutions/tle/*; do \
+		cp "$$f" build/judge-package/submissions/time_limit_exceeded; \
 	done
 endif
 	for f in $$(find build/testcases/ -name 'sample*' '(' -name '*.in' -or -name '*.ans' -or -name '*.desc' ')'); do \
