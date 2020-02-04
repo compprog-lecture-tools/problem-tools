@@ -205,9 +205,6 @@ ifneq ($(VALIDATOR),)
 	for f in '$(TOOLS_MAKE_DIR)'/validator/solutions/wa/*; do \
 		cp "$$f" build/judge-package/submissions/wrong_answer; \
 	done
-	for f in '$(TOOLS_MAKE_DIR)'/validator/solutions/tle/*; do \
-		cp "$$f" build/judge-package/submissions/time_limit_exceeded; \
-	done
 endif
 ifneq ($(INTERACTOR),)
 	for f in '$(TOOLS_MAKE_DIR)'/interactor/solutions/wa/*; do \
