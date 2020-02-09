@@ -1,0 +1,6 @@
+Jinja2
+requests
+lxml
+questionary
+python-dateutil
+toml

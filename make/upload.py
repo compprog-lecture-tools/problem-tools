@@ -2,7 +2,7 @@
 import sys
 from pathlib import Path
 
-import PyInquirer
+import questionary
 import requests
 import toml
 from lxml import html
@@ -75,11 +75,7 @@ def upload_validator(session, base_url, filename):
 
 
 def prompt_choice(message, choices):
-    return PyInquirer.prompt(dict(name='name',
-                                  type='list',
-                                  message=message,
-                                  choices=choices),
-                             raise_keyboard_interrupt=True)['name']
+    return questionary.select(message=message, choices=choices).unsafe_ask()
 
 
 def main():
@@ -91,10 +87,7 @@ def main():
     username = judges[base_url]['username']
     password = judges[base_url].get('password')
     if not password:
-        password = PyInquirer.prompt(dict(name='name',
-                                          type='password',
-                                          message='Judge password'),
-                                     raise_keyboard_interrupt=True)['name']
+        password = questionary.password(message='Judge password').unsafe_ask()
 
     csrf_token = get_csrf_token(session, base_url)
     if not login(session, base_url, csrf_token, username, password):

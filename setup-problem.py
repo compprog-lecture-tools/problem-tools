@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 import jinja2
-import PyInquirer
+import questionary
 from dateutil.relativedelta import relativedelta, FR
 
 NOT_COURSES = {'tools'}
@@ -15,9 +15,7 @@ GIT_REPO_ROOT_CMD = ['git', 'rev-parse', '--show-toplevel']
 
 
 def prompt_single(prompt_type, **kwargs):
-    kwargs['name'] = 'arst'
-    kwargs['type'] = prompt_type
-    return PyInquirer.prompt(kwargs, raise_keyboard_interrupt=True)['arst']
+    return questionary.prompts.prompt_by_name(prompt_type)(**kwargs).unsafe_ask()
 
 
 def select_dir_or_new(directory, message, ignore):
