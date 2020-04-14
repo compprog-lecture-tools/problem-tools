@@ -48,6 +48,14 @@ You can read through it while building your first problem.
   * *Why do I need g++ instead of clang?*
     Clang's standard library does not implement `ios_base::sync_with_stdio`, which means that IO will be significantly slower.
     This makes it much harder to compare local runtime with runtime on the judge.
+  * *How do I update the python dependencies?*
+    The dependency management in this repository follows the method described [here](https://www.kennethreitz.org/essays/a-better-pip-workflow).
+    The packages should be installed in a virtual environment.
+    In summary: the file `requirements-to-freeze.txt` describes the packages directly required by this repository, possibly with version specifications.
+    The file `requirements.txt` describes all direct and indirect dependencies, down to the specific version.
+    Thus, running `pip install -r requirements.txt` ensures identical environments with identical versions.
+    If you want to modify the dependencies, then optionally specify the new direct dependencies in `requirements-to-freeze.txt` and run `pip install -r requirements-to-freeze.txt --upgrade`.
+    Now your environment is up to date. To reflect these changes to `requirements.txt`, run `pip freeze > requirements.txt`.
 
 ## Setting up a problem repository
 
