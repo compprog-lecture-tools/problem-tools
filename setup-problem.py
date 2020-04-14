@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import datetime
+import json
 import random
 import re
 import subprocess
@@ -12,10 +13,22 @@ from dateutil.relativedelta import relativedelta, FR
 NOT_COURSES = {'tools'}
 NOT_CONTESTS = {'templates'}
 GIT_REPO_ROOT_CMD = ['git', 'rev-parse', '--show-toplevel']
+TAGS = ['2-sat', 'binary search', 'bitmasks', 'brute force',
+        'chinese remainder theorem', 'combinatorics', 'constructive algorithms',
+        'data structures', 'dfs and similar', 'divide and conquer', 'dp', 'dsu',
+        'expression parsing', 'fft', 'flows', 'games', 'geometry',
+        'graph matchings', 'graphs', 'greedy', 'hashing', 'implementation',
+        'interactive', 'math', 'matrices', 'meet-in-the-middle',
+        'number theory', 'probabilities', 'schedules', 'shortest paths',
+        'sortings', 'string suffix structures', 'strings', 'ternary search',
+        'trees', 'two pointers']
+DIFFICULTIES = ['[1] trivial', '[2] easy', '[3] medium', '[4] hard',
+                '[5] very hard']
 
 
 def prompt_single(prompt_type, **kwargs):
-    return questionary.prompts.prompt_by_name(prompt_type)(**kwargs).unsafe_ask()
+    return questionary.prompts.prompt_by_name(prompt_type)(
+        **kwargs).unsafe_ask()
 
 
 def select_dir_or_new(directory, message, ignore):
@@ -58,7 +71,8 @@ def prompt_submission_date():
 
 def setup_jinja_env(repo_root, course_directory):
     loader = jinja2.PrefixLoader(delimiter=':', mapping={
-        'global': jinja2.FileSystemLoader(str(repo_root / 'tools/make/templates')),
+        'global': jinja2.FileSystemLoader(
+            str(repo_root / 'tools/make/templates')),
         'course': jinja2.FileSystemLoader(str(course_directory / 'templates'))
     })
     return jinja2.Environment(
@@ -138,12 +152,40 @@ def main():
                                         default='13:30')
     timelimit = prompt_single('input', message='Timelimit', default='1.0')
 
+    difficulty_name = prompt_single('select', message='Difficulty',
+                                    choices=DIFFICULTIES)
+    difficulty = DIFFICULTIES.index(difficulty_name) + 1
+    tags = prompt_single('checkbox', message='Tags', choices=TAGS)
+    based_on_type = prompt_single('select', message='Based on',
+                                  choices=['Nothing', 'Old problem',
+                                           'Codeforces', 'Other'])
+    if based_on_type == 'Nothing':
+        based_on_type, based_on_data = None, None
+    elif based_on_type == 'Old problem':
+        old_course = prompt_single('text', message='Course of the old problem')
+        old_contest = prompt_single('text',
+                                    message='Contest of the old problem')
+        old_name = prompt_single('text', message='Name of the old problem')
+        based_on_type = 'old-problems'
+        based_on_data = [old_course, old_contest, old_name]
+    elif based_on_type == 'Codeforces':
+        cf_contest = prompt_single('text',
+                                   message='Id of the codeforces contest')
+        cf_problem = prompt_single('text',
+                                   message='Id of the codeforces problem')
+        based_on_type = 'codeforces'
+        based_on_data = [cf_contest, cf_problem]
+    else:
+        based_on_type = 'other'
+        based_on_data = [prompt_single('text', message='Based on text')]
+
     jinja_env = setup_jinja_env(repo_root, course_dir)
     problem_dir = contest_dir / problem_id
     problem_dir.mkdir()
 
     render_template(jinja_env, 'course:description/problem.tex',
-                    problem_dir / 'problem.tex', submission_date=submission_date,
+                    problem_dir / 'problem.tex',
+                    submission_date=submission_date,
                     submission_time=submission_time)
     (problem_dir / '.template').symlink_to(
         '../../templates/description/template', target_is_directory=True)
@@ -166,10 +208,24 @@ def main():
         setup_executable('interactor', 'cpp', executables_dir, jinja_env)
 
     if interactor or 'cpp' in (generator_lang, validator_lang):
-        (executables_dir / 'testlib.h').symlink_to('../../../../tools/make/testlib.h')
+        (executables_dir / 'testlib.h').symlink_to(
+            '../../../../tools/make/testlib.h')
 
-    (problem_dir / 'domjudge-problem.ini').write_text(f'timelimit={timelimit}\n')
+    (problem_dir / 'domjudge-problem.ini').write_text(
+        f'timelimit={timelimit}\n')
     (problem_dir / 'Makefile').symlink_to('../../../tools/make/Makefile')
+
+    with (problem_dir / 'problem.json').open('w') as f:
+        json_data = {
+            'difficulty': difficulty,
+            'tags': tags,
+        }
+        if based_on_type is not None:
+            json_data['based_on'] = {
+                'type': based_on_type,
+                'data': based_on_data,
+            }
+        json.dump(json_data, f, indent=2, sort_keys=True)
 
 
 if __name__ == '__main__':
