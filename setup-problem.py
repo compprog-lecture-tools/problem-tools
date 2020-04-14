@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import argparse
 import datetime
 import json
 import random
 import re
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
@@ -62,7 +64,8 @@ class ProblemInfo:
 
     @property
     def needs_testlib(self):
-        return self.interactor or 'cpp' in (self.generator_lang, self.validator_lang)
+        return self.interactor or 'cpp' in (
+            self.generator_lang, self.validator_lang)
 
 
 def prompt_text(message, **kwargs):
@@ -275,12 +278,47 @@ def setup_problem(info, repo_root):
     save_problem_json(info.problem_json_data, problem_dir)
 
 
+def upgrade_problem(cwd, repo_root):
+    problem_dir = None
+    try:
+        index = cwd.parents.index(repo_root)
+        if index == 2:
+            problem_dir = cwd
+        elif index > 2:
+            problem_dir = cwd.parents[index - 3]
+    except ValueError:
+        pass
+    if problem_dir is None:
+        print('Upgrade must be run from inside a problem directory',
+              file=sys.stderr)
+        sys.exit(1)
+
+    with (problem_dir / 'domjudge-problem.ini').open() as f:
+        if sum(1 for line in f if line.strip() != '') > 1:
+            print('Problem ini contains more than just timelimit. '
+                  'Check manually.')
+
+    if not (problem_dir / 'problem.json').is_file():
+        print('Problem.json missing, upgrading')
+        problem_json_data = prompt_problem_json_data()
+        save_problem_json(problem_json_data, problem_dir)
+
+
 def main():
+    parser = argparse.ArgumentParser(description='Setup or upgrade a problem')
+    parser.add_argument('-u', '--upgrade', action='store_true',
+                        help='Upgrade an existing problem instead of creating '
+                             'a new one')
+    args = parser.parse_args()
+
     repo_root = Path(
         subprocess.check_output(GIT_REPO_ROOT_CMD).rstrip().decode('utf-8'))
     cwd = Path.cwd()
-    info = prompt_problem_info(repo_root, cwd)
-    setup_problem(info, repo_root)
+    if args.upgrade:
+        upgrade_problem(cwd, repo_root)
+    else:
+        info = prompt_problem_info(repo_root, cwd)
+        setup_problem(info, repo_root)
 
 
 if __name__ == '__main__':
