@@ -18,7 +18,8 @@ Each problem consist of:
   * (optional) an interactor for interactive problems
   * (optional) an answer generator if the `.ans` files do not correspond to the solutions output
   * solution notes created in Ipe
-  * a `domjudge-problem.ini` containing some metadata
+  * a `problem.json` containing metadata for the problem list
+  * a `domjudge-problem.ini` containing the timelimit
 
 All of the executables are grouped in a `executables` directory, and can be written in either C++17 or Python 3.
 
@@ -50,6 +51,9 @@ You can read through it while building your first problem.
   * *Why do I need g++ instead of clang?*
     Clang's standard library does not implement `ios_base::sync_with_stdio`, which means that IO will be significantly slower.
     This makes it much harder to compare local runtime with runtime on the judge.
+  * *How do I upgrade old problems to a new format?*
+    The `setup-problem.py` has an upgrade mode (`setup-problem.py --upgrade`) that aims to help with that process.
+    Currently, it prompts you for `problem.json` metadata if it is missing, and detects old `domjudge-problem.ini`'s containing outdated/unnecessary data.
   * *How do I update the python dependencies?*
     The dependency management in this repository follows the method described [here](https://www.kennethreitz.org/essays/a-better-pip-workflow).
     The packages should be installed in a virtual environment.

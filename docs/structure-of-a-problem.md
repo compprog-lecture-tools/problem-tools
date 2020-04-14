@@ -77,3 +77,28 @@ To keep your code concise, remember that you can use `quitf(verdict, format_stri
 Use an interactor in an interactive problem, i.e. one where the solution can send queries that are then answered by the interactor.
 
 The implementation of interactors is complex enough to warrant its own document: [interactors.md](interactors.md).
+
+## `problem.json`
+
+This contains metadata for the problem that will be shown in the problem list.
+You generally don't need to care about the format of this file since `setup-problem.py` prompts you for everything needed, but it is documented here for completeness.
+
+The overall format is:
+```json
+{
+  "difficulty": 3,
+  "tags": [...],
+  "based_on": {
+    "type": "...",
+    "data": [...]
+  }
+}
+```
+Difficulty can be a value between 1 and 5, standing for trivial, easy, medium, hard, and very hard.
+Tags is a list of tag strings.
+The available tags are based on the ones used by codeforces (`setup-problem.py` contains a complete list).
+
+The `based_on` key is optional, but if it is present, its `type` subkey must be one of three values: `"codeforces"`, `"old-problem"`, or `"other"`.
+If it is `"codeforces"`, `data` must contain two strings: the id of the codeforces contest and problem, for example `["1234", "B1"]`.
+If it is `"old-problem"`, `data` must contain a triple of the old problems course, contest, and problem name, in that order.
+Lastly, if it is `"other"`, `data` contains a single string message.
