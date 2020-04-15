@@ -28,7 +28,7 @@ All of the executables are grouped in a `executables` directory, and can be writ
 To use these tools, you will need:
   * Bash 4+ with the GNU `realpath` tool installed
   * Make
-  * Python 3.6+ with everything listed in `requirements.txt` installed (run `pip install -r requirements.txt` with the `pip` version corresponding to your python 3.6+ version)
+  * Python 3.7+ with everything listed in `requirements.txt` installed (run `pip install -r requirements.txt` with the `pip` version corresponding to your python 3.7+ version)
   * GCC 8.1 or newer (on macOS, you will need to install this using homebrew, the builtin `g++` program links to clang). See the faq entry below for g++ vs. clang.
   * Latex including `latexmk` (already included with most latex setups)
   * Ipe (the `ipetoipe` program should be available in your `PATH`)
