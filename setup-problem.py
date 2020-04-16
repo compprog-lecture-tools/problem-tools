@@ -22,7 +22,7 @@ TAGS = ['2-sat', 'binary search', 'bitmasks', 'brute force',
         'data structures', 'dfs and similar', 'divide and conquer', 'dp', 'dsu',
         'expression parsing', 'fft', 'flows', 'games', 'geometry',
         'graph matchings', 'graphs', 'greedy', 'hashing', 'implementation',
-        'interactive', 'math', 'matrices', 'meet-in-the-middle',
+        'math', 'matrices', 'meet-in-the-middle',
         'number theory', 'probabilities', 'schedules', 'shortest paths',
         'sortings', 'string suffix structures', 'strings', 'ternary search',
         'trees', 'two pointers']
