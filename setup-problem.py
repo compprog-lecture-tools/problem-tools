@@ -135,7 +135,7 @@ def prompt_problem_json_data():
         old_course = prompt_text('Course of the old problem')
         old_contest = prompt_text('Contest of the old problem')
         old_name = prompt_text('Name of the old problem')
-        data.based_on_type = 'old-problems'
+        data.based_on_type = 'old-problem'
         data.based_on_data = [old_course, old_contest, old_name]
     elif based_on_type == 'Codeforces':
         cf_contest = prompt_text('Id of the codeforces contest')
