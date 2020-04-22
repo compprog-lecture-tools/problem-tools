@@ -36,6 +36,7 @@ class ProblemJsonData:
 
     difficulty: int
     tags: List[str]
+    description: str
     based_on_type: Optional[str] = None
     based_on_data: Optional[List[str]] = None
 
@@ -127,7 +128,8 @@ def prompt_problem_json_data():
     difficulty_name = prompt_select('Difficulty', DIFFICULTIES)
     difficulty = DIFFICULTIES.index(difficulty_name) + 1
     tags = prompt_checkbox('Tags', TAGS)
-    data = ProblemJsonData(difficulty, tags)
+    description = prompt_text('Description')
+    data = ProblemJsonData(difficulty, tags, description)
     based_on_type = prompt_select('Based on',
                                   ['Nothing', 'Old problem', 'Codeforces',
                                    'Other'])
@@ -298,10 +300,19 @@ def upgrade_problem(cwd, repo_root):
             print('Problem ini contains more than just timelimit. '
                   'Check manually.')
 
-    if not (problem_dir / 'problem.json').is_file():
+    try:
+        with (problem_dir / 'problem.json').open() as f:
+            data = json.load(f)
+    except FileNotFoundError:
         print('Problem.json missing, upgrading')
         problem_json_data = prompt_problem_json_data()
         save_problem_json(problem_json_data, problem_dir)
+    else:
+        if 'description' not in data:
+            print('Problem description missing')
+            data['description'] = prompt_text('Description')
+            with (problem_dir / 'problem.json').open('w') as f:
+                json.dump(data, f, indent=2, sort_keys=True)
 
 
 def main():
