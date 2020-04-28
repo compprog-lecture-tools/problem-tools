@@ -230,6 +230,7 @@ def setup_executable(name, language, executables_dir, jinja_env, **kwargs):
 def save_problem_json(data, problem_dir):
     with (problem_dir / 'problem.json').open('w') as f:
         json_data = {
+            'description': data.description,
             'difficulty': data.difficulty,
             'tags': data.tags,
         }
