@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
+import dateutil.parser
 import questionary
 import requests
 import toml
 from lxml import html
+from requests.auth import HTTPBasicAuth
 
 
 def exit_error(message):
@@ -20,6 +23,23 @@ def get_login_entries():
             return toml.load(f)
     except OSError as err:
         exit_error(f'login.toml not found or not accessible:\n\n{err}')
+
+
+def is_active_testing_contest(contest):
+    now = datetime.now(timezone.utc)
+    start_time = dateutil.parser.parse(contest['start_time'])
+    end_time = dateutil.parser.parse(contest['end_time'])
+    shortname = contest['shortname']
+    return shortname.endswith('testing') and start_time <= now <= end_time
+
+
+def get_active_testing_contest(base_url, user, password):
+    data = requests.get(f'{base_url}/api/contests',
+                        auth=HTTPBasicAuth(user, password)).json()
+    return [
+        contest['shortname'] for contest in data
+        if is_active_testing_contest(contest)
+    ]
 
 
 def get_csrf_token(session, base_url):
@@ -81,13 +101,18 @@ def prompt_choice(message, choices):
 def main():
     session = requests.Session()
     judges = get_login_entries()
+    if any('contests' in judge for judge in judges.values()):
+        print('login.toml contains contest list which is no longer needed')
     base_url = prompt_choice('Where to upload to', judges.keys())
-    contests = judges[base_url]['contests']
-    contest_name = prompt_choice('Which contest to add to', contests)
     username = judges[base_url]['username']
     password = judges[base_url].get('password')
     if not password:
         password = questionary.password(message='Judge password').unsafe_ask()
+    contests = get_active_testing_contest(base_url, username, password)
+    if not contests:
+        exit_error('No running testing contests found for judge '
+                   '(shortname must end in "testing")')
+    contest_name = prompt_choice('Which contest to add to', contests)
 
     csrf_token = get_csrf_token(session, base_url)
     if not login(session, base_url, csrf_token, username, password):
