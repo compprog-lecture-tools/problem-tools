@@ -34,7 +34,7 @@ To use these tools, you will need:
   * Ipe (the `ipetoipe` program should be available in your `PATH`)
   * (optional) GNU `parallel` to speed up some scripts
 
-For some helper scripts you will also need `pdfjoin` and `pdfinfo`.
+For some helper scripts you will also need `pdfjam` and `pdfinfo`.
 Lastly, if you want to run a local judge setup for testing, you will also need the requirements listed in [local-judge/README.md](local-judge/README.md).
 
 ## Usage
