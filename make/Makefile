@@ -164,7 +164,7 @@ build/testcases/%.ans: build/testcases/%.in $(ANS_GEN_RUN) build/testcases/testc
 
 build/testcases/answers-stamp: build/testcases/testcases-stamp $(ANS_GEN_RUN)
 	echo Generating answers
-	TESTCASES=$$(find build/testcases/ -name *.in | sed 's/\.in/\.ans/g'); \
+	TESTCASES=$$(find build/testcases/ -name '*.in' | sed 's/\.in/\.ans/g'); \
 	if [ -n "$$TESTCASES" ]; then \
 		'$(MAKE)' $$TESTCASES; \
 	fi
@@ -173,7 +173,7 @@ build/testcases/answers-stamp: build/testcases/testcases-stamp $(ANS_GEN_RUN)
 
 build/testcases/sample-answers-stamp: build/testcases/testcases-stamp $(ANS_GEN_RUN)
 	echo Generating sample answers
-	TESTCASES=$$(find build/testcases/ -name sample*.in | sed 's/\.in/\.ans/g'); \
+	TESTCASES=$$(find build/testcases/ -name 'sample*.in' | sed 's/\.in/\.ans/g'); \
 	if [ -n "$$TESTCASES" ]; then \
 		'$(MAKE)' $$TESTCASES; \
 	fi
