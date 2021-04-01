@@ -43,7 +43,7 @@ def get_active_testing_contest(base_url, user, password):
 
 
 def get_csrf_token(session, base_url):
-    csrf_response = session.get(base_url + 'login')
+    csrf_response = session.get(base_url + '/login')
     tree = html.document_fromstring(csrf_response.content)
     return tree.xpath("//input[contains(@name, '_csrf_token')]")[0].value
 
@@ -54,14 +54,14 @@ def login(session, base_url, csrf_token, username, password):
         '_password': password,
         '_csrf_token': csrf_token
     }
-    login_response = session.post(base_url + 'login', data)
+    login_response = session.post(base_url + '/login', data)
     # Successful login will redirect somewhere else, unsuccessful stays on
     # login page
     return 'login' not in login_response.url
 
 
 def get_contest_id(session, base_url, contest_name):
-    contest_response = session.get(base_url + 'jury/problems')
+    contest_response = session.get(base_url + '/jury/problems')
     tree = html.document_fromstring(contest_response.content)
     contest_elements = tree.xpath(
         "//select[@id='problem_upload_multiple_contest']/option")
@@ -77,7 +77,7 @@ def upload_problem(session, base_url, contest_id, filename):
         'problem_upload_multiple[upload]': 'Upload'
     }
     files = {'problem_upload_multiple[archives][]': open(filename, 'rb')}
-    upload_response = session.post(base_url + 'jury/problems',
+    upload_response = session.post(base_url + '/jury/problems',
                                    data,
                                    files=files)
     if 'Saved problem' in upload_response.text:
@@ -88,7 +88,7 @@ def upload_problem(session, base_url, contest_id, filename):
 def upload_validator(session, base_url, filename):
     data = {'executable_upload[type]': 'compare'}
     files = {'executable_upload[archives][]': open(filename, 'rb')}
-    upload_response = session.post(base_url + 'jury/executables',
+    upload_response = session.post(base_url + '/jury/executables',
                                    data,
                                    files=files)
     return upload_response.status_code
@@ -106,6 +106,9 @@ def main():
     base_url = prompt_choice('Where to upload to', judges.keys())
     username = judges[base_url]['username']
     password = judges[base_url].get('password')
+    if base_url[-1]=='/':
+        base_url = base_url[:-1]
+
     if not password:
         password = questionary.password(message='Judge password').unsafe_ask()
     contests = get_active_testing_contest(base_url, username, password)
