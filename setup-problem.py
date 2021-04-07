@@ -12,7 +12,7 @@ from typing import List, Optional
 
 import jinja2
 import questionary
-from dateutil.relativedelta import relativedelta, FR
+from dateutil.relativedelta import relativedelta, TH
 
 NOT_COURSES = {'tools'}
 NOT_CONTESTS = {'templates'}
@@ -102,20 +102,20 @@ def prompt_language(message):
 
 def prompt_submission_date():
     today = datetime.date.today()
-    friday = today + relativedelta(weekday=FR)
-    is_friday = today == friday
-    fridays = {}
-    if not is_friday:
-        fridays[f'This friday ({friday:%d.%m.%Y})'] = friday
+    day = today + relativedelta(weekday=TH)
+    is_tody = today == day
+    thursdays = {}
+    if not today== day:
+        thursdays[f'This Thursday ({day:%d.%m.%Y})'] = day
     for i in range(4):
-        friday += relativedelta(weeks=1)
-        desc = 'Next friday' if i == 0 else f'Friday in {i + 1} weeks'
-        fridays[f'{desc} ({friday:%d.%m.%Y})'] = friday
-    choices = list(fridays.keys()) + ['*other*']
+        day += relativedelta(weeks=1)
+        desc = 'Next Thursday' if i == 0 else f'Thursday in {i + 1} weeks'
+        thursdays[f'{desc} ({day:%d.%m.%Y})'] = day
+    choices = list(thursdays.keys()) + ['*other*']
     choice = prompt_select('Submission date', choices)
     if choice == '*other*':
         return prompt_text('Custom submission date')
-    return f'{fridays[choice]:%d.%m.%Y}'
+    return f'{thursdays[choice]:%d.%m.%Y}'
 
 
 def validate_problem_id(problem_id):
@@ -193,7 +193,7 @@ def prompt_problem_info(repo_root, cwd):
         submission_time = 'contest'
     else:
         submission_date = prompt_submission_date()
-        submission_time = prompt_text('Submission time', default='13:30')
+        submission_time = prompt_text('Submission time', default='11:00')
     timelimit = prompt_text('Timelimit', default='1.0')
     problem_json_data = prompt_problem_json_data()
     return ProblemInfo(course_dir, contest_dir, problem_id, solution_lang,
