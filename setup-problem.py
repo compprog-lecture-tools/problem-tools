@@ -193,7 +193,7 @@ def prompt_problem_info(repo_root, cwd):
         submission_time = 'contest'
     else:
         submission_date = prompt_submission_date()
-        submission_time = prompt_text('Submission time', default='11:00')
+        submission_time = prompt_text('Submission time', default='12:00')
     timelimit = prompt_text('Timelimit', default='1.0')
     problem_json_data = prompt_problem_json_data()
     return ProblemInfo(course_dir, contest_dir, problem_id, solution_lang,
