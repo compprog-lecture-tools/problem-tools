@@ -21,7 +21,7 @@ Each problem consist of:
   * a `problem.json` containing metadata for the problem list
   * a `domjudge-problem.ini` containing the timelimit
 
-All of the executables are grouped in a `executables` directory, and can be written in either C++17 or Python 3.
+All of the executables are grouped in a `executables` directory, and can be written in either C++20 or Python 3.
 
 ## Requirements
 
