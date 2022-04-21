@@ -26,7 +26,7 @@ find_cxx_compiler() {
 
 WARNING_FLAGS="-Wall -Wextra -pedantic -Wshadow -Wformat=2 -Wfloat-equal -Wconversion -Wno-sign-conversion -Wno-sign-compare"
 SANITIZER_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=undefined"
-COMMON_FLAGS="-std=c++20 -isystem$(dirname "$1")"
+COMMON_FLAGS="-std=c++17 -isystem$(dirname "$1")"
 
 # Increase stack size to 256MiB on macos
 if [[ $OSTYPE == "darwin"* ]]; then
