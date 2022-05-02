@@ -1,7 +1,12 @@
 # vim: set fdm=marker:
-REPO_ROOT=$(shell git rev-parse --show-toplevel)
+# keep symlinks in current path
+PWD=$(shell pwd -L)
+PROBLEM_ID=$(notdir $(PWD))
+WEEK_DIR  = $(abspath $(PWD)/../)
+YEAR_DIR  = $(abspath $(PWD)/../../)
+REPO_ROOT = $(abspath $(PWD)/../../../)
 TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
-PROBLEM_ID=$(shell basename $$PWD)
+
 TIMELIMIT=$(shell grep -o "^timelimit=\S*" domjudge-problem.ini | sed 's/timelimit=//')
 
 find_program = $(if $(wildcard executables/$(1).cpp),executables/$(1).cpp,$(if $(wildcard executables/$(1).py),executables/$(1).py,))
@@ -19,7 +24,7 @@ WA_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,wa,$(s)),$(s),)
 NON_TLE_SOLUTIONS=$(foreach s,$(ALL_SOLUTIONS),$(if $(call has_marker,tle,$(s)),,$(s)))
 AC_SOLUTIONS=$(foreach s,$(NON_TLE_SOLUTIONS),$(if $(call has_marker,wa,$(s)),,$(s)))
 
-NOTES_PDF=build/$(PROBLEM_ID)-notes.pdf
+NOTES_PDF=build/notes.pdf
 GENERATOR_RUN=$(patsubst executables/%,build/builds/%/run,$(GENERATOR))
 SOLUTION_RUN=$(patsubst executables/%,build/builds/%/run,$(SOLUTION))
 VALIDATOR_RUN=$(patsubst executables/%,build/builds/%/run,$(VALIDATOR))
@@ -27,6 +32,8 @@ ANSWER_GENERATOR_RUN=$(patsubst executables/%,build/builds/%/run,$(ANSWER_GENERA
 
 ANS_GEN_RUN=$(if $(ANSWER_GENERATOR),$(ANSWER_GENERATOR_RUN),$(SOLUTION_RUN))
 
+SUBMISSION_DATE_FILE=$(wildcard $(WEEK_DIR)/deadline.txt)
+SUBMISSION_DATE=$(if $(SUBMISSION_DATE_FILE),$(file < $(SUBMISSION_DATE_FILE)),end of contest)
 
 # Sanity checks {{{
 ifneq ($(INTERACTOR),)
@@ -131,19 +138,18 @@ time-full: time-full-$(notdir $(SOLUTION))
 
 
 # {{{ Latex building
-build/problem/metainfo-include.tex: domjudge-problem.ini ..
+build/problem/metainfo-include.tex: domjudge-problem.ini $(SUBMISSION_DATE_FILE)
 	mkdir -p build/problem/
 	printf '\\newcommand{\\problemName}{$(PROBLEM_ID)}\n' > $@
 	printf '\\newcommand{\\problemDir}{../..}\n' >> $@
 	printf '\\newcommand{\\timelimit}{%s}\n' "$(TIMELIMIT)" >> $@
+	printf '\\newcommand{\\deadline}{%s}\n' "$(SUBMISSION_DATE)" >> $@
 
-build/problem/problem.pdf: problem.tex $(wildcard .template/*) build/testcases/sample-answers-stamp build/problem/metainfo-include.tex
+build/problem/problem.pdf: problem.tex $(wildcard $(YEAR_DIR)/.template/*) build/testcases/sample-answers-stamp build/problem/metainfo-include.tex
 	echo Building problem.pdf
 	mkdir -p build/problem/
 	cp -f problem.tex build/problem/
-	if [ ! -e build/problem/.template ]; then \
-		ln -s ../../.template build/problem/.template; \
-	fi
+	cp -f $(YEAR_DIR)/.template/* build/problem
 	cd build/problem; latexmk -quiet -pdf -interaction=nonstopmode -shell-escape problem > ../tex.log
 # }}}
 
@@ -253,7 +259,7 @@ endif
 
 # {{{ Ipe building
 $(NOTES_PDF): notes.ipe
-	echo 'Generating $(notdir $(NOTES_PDF))'
+	echo 'Generating $(PROBLEM_ID) $(notdir $(NOTES_PDF))'
 	mkdir -p build
 	ipetoipe -pdf -export notes.ipe '$@' 2> /dev/null
 # }}}
