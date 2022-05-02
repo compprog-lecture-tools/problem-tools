@@ -22,7 +22,9 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 PDFJAM_PDFS=()
 for p in "${@:2}"; do
-    make -C "$p" pdf
+    cd $p
+    make pdf
+    cd ..
     PAGES="$(pdfinfo "$p/build/problem/problem.pdf" | grep 'Pages:' | awk '{print $2}')"
     PDFJAM_PDFS+=("$p/build/problem/problem.pdf")
     if [[ $((PAGES % 2)) -eq 1 ]]; then
