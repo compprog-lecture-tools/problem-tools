@@ -15,7 +15,7 @@ import questionary
 from dateutil.relativedelta import relativedelta, TH
 
 NOT_COURSES = {'tools'}
-NOT_CONTESTS = {'templates'}
+NOT_CONTESTS = {}
 GIT_REPO_ROOT_CMD = ['git', 'rev-parse', '--show-toplevel']
 TAGS = ['2-sat', 'binary search', 'bitmasks', 'brute force',
         'chinese remainder theorem', 'combinatorics', 'constructive algorithms',
@@ -53,8 +53,6 @@ class ProblemInfo:
     answer_generator_lang: Optional[str]
     validator_lang: Optional[str]
     interactor: bool
-    submission_date: str
-    submission_time: str
     timelimit: int
     problem_json_data: ProblemJsonData
 
@@ -98,24 +96,6 @@ def prompt_dir_or_new(directory, message, ignore):
 
 def prompt_language(message):
     return prompt_select(message, ['cpp', 'py'])
-
-
-def prompt_submission_date():
-    today = datetime.date.today()
-    day = today + relativedelta(weekday=TH)
-    is_tody = today == day
-    thursdays = {}
-    if not today== day:
-        thursdays[f'This Thursday ({day:%d.%m.%Y})'] = day
-    for i in range(4):
-        day += relativedelta(weeks=1)
-        desc = 'Next Thursday' if i == 0 else f'Thursday in {i + 1} weeks'
-        thursdays[f'{desc} ({day:%d.%m.%Y})'] = day
-    choices = list(thursdays.keys()) + ['*other*']
-    choice = prompt_select('Submission date', choices)
-    if choice == '*other*':
-        return prompt_text('Custom submission date')
-    return f'{thursdays[choice]:%d.%m.%Y}'
 
 
 def validate_problem_id(problem_id):
@@ -187,26 +167,18 @@ def prompt_problem_info(repo_root, cwd):
         validator_lang = prompt_language('Validator language')
         if prompt_confirm('Add answer generator'):
             answer_generator_lang = prompt_language('Answer generator language')
-
-    if prompt_confirm('Is live contest?', default=False):
-        submission_date = 'end of'
-        submission_time = 'contest'
-    else:
-        submission_date = prompt_submission_date()
-        submission_time = prompt_text('Submission time', default='12:00')
     timelimit = prompt_text('Timelimit', default='1.0')
     problem_json_data = prompt_problem_json_data()
     return ProblemInfo(course_dir, contest_dir, problem_id, solution_lang,
                        generator_lang, answer_generator_lang, validator_lang,
-                       interactor, submission_date, submission_time, timelimit,
-                       problem_json_data)
+                       interactor, timelimit, problem_json_data)
 
 
 def setup_jinja_env(repo_root, course_directory):
     loader = jinja2.PrefixLoader(delimiter=':', mapping={
         'global': jinja2.FileSystemLoader(
             str(repo_root / 'tools/make/templates')),
-        'course': jinja2.FileSystemLoader(str(course_directory / 'templates'))
+        'repo': jinja2.FileSystemLoader(str(repo_root / '.template'))
     })
     return jinja2.Environment(
         loader=loader,
@@ -247,13 +219,9 @@ def setup_problem(info, repo_root):
     problem_dir = info.contest_dir / info.id
     problem_dir.mkdir()
 
-    render_template(jinja_env, 'course:description/problem.tex',
-                    problem_dir / 'problem.tex',
-                    submission_date=info.submission_date,
-                    submission_time=info.submission_time)
-    (problem_dir / '.template').symlink_to(
-        '../../templates/description/template', target_is_directory=True)
-    render_template(jinja_env, 'course:notes.ipe', problem_dir / 'notes.ipe',
+    render_template(jinja_env, 'repo:problem.tex', 
+                    problem_dir / 'problem.tex') # TODO this could be a simple copy
+    render_template(jinja_env, 'repo:notes.ipe', problem_dir / 'notes.ipe',
                     problem_name=info.name)
 
     executables_dir = problem_dir / 'executables'
