@@ -1,11 +1,11 @@
 REPO_ROOT=$(shell git rev-parse --show-toplevel)
 TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
-PROBLEMS=$(shell find . -mindepth 1 -maxdepth 1 -type d | sort)
+PROBLEMS=$(shell find -L . -mindepth 1 -maxdepth 1 -type d | sort)
 
 .PHONY: notes
 notes:
 	$(foreach p,$(PROBLEMS),'$(MAKE)' -C $(p) notes;)
-	pdfjam -q -o notes.pdf --fitpaper true --rotateoversize true $(foreach p,$(PROBLEMS),'$(p)/build/$(notdir $(p))-notes.pdf')
+	pdfjam -q -o notes.pdf --fitpaper true --rotateoversize true $(foreach p,$(PROBLEMS),'$(p)/build/notes.pdf')
 
 .PHONY: clean
 clean:
