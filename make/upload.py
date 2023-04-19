@@ -7,6 +7,7 @@ import dateutil.parser
 import questionary
 import requests
 import toml
+from lxml import html
 from requests.auth import HTTPBasicAuth
 
 
@@ -52,8 +53,31 @@ def upload_problem(base_url, auth, contest_id, filename):
     return upload_response.status_code
 
 
-def upload_validator(base_url, auth, filename):
-    exit_error('currently not supported')
+def get_csrf_token(session, base_url):
+    csrf_response = session.get(base_url + '/login')
+    tree = html.document_fromstring(csrf_response.content)
+    return tree.xpath("//input[contains(@name, '_csrf_token')]")[0].value
+
+
+def login(session, base_url, csrf_token, username, password):
+    data = {
+        '_username': username,
+        '_password': password,
+        '_csrf_token': csrf_token
+    }
+    login_response = session.post(base_url + '/login', data)
+    # Successful login will redirect somewhere else, unsuccessful stays on
+    # login page
+    return 'login' not in login_response.url
+
+
+def upload_validator(session, base_url, filename):
+    data = {'executable_upload[type]': 'compare'}
+    files = {'executable_upload[archives][]': open(filename, 'rb')}
+    upload_response = session.post(base_url + '/jury/executables/add',
+                                   data,
+                                   files=files)
+    return upload_response.status_code
 
 
 def prompt_choice(message, choices):
@@ -61,7 +85,6 @@ def prompt_choice(message, choices):
 
 
 def main():
-    session = requests.Session()
     judges = get_login_entries()
     if any('contests' in judge for judge in judges.values()):
         print('login.toml contains contest list which is no longer needed')
@@ -90,7 +113,13 @@ def main():
     if len(sys.argv) == 3:
         # Upload the validator first, so that the problem can be linked to it
         # using its domjudge-problem.ini
-        result = upload_validator(base_url, auth, sys.argv[2])
+
+        session = requests.Session()
+        csrf_token = get_csrf_token(session, base_url)
+        if not login(session, base_url, csrf_token, username, password):
+            exit_error('Invalid login data')
+
+        result = upload_validator(session, base_url, sys.argv[2])
         if result == 200:
             print('-> Validator uploaded successfully')
         elif result == 500:
