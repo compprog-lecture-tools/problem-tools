@@ -13,8 +13,6 @@ case "$EXT" in
             cp "$DIR"/*.h "$DIR"/*.hpp .
         fi
         cp "$INTERACTOR_SCRIPT_DIR/build.sh" build
-        cp "$INTERACTOR_SCRIPT_DIR/run.sh" run
-        cp "$INTERACTOR_SCRIPT_DIR/run_testlib_interactor.cpp" run_testlib_interactor.cpp
         ;;
     *)
         echo "Interactors are only supported in c++" >&2
