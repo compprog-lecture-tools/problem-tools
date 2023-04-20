@@ -5,3 +5,4 @@ build() {
 
 build run_testlib_interactor
 build interactor
+mv interactor run
