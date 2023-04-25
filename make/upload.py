@@ -74,7 +74,7 @@ def delete_problem(session, base_url, problem_name):
     print('-> Problem deleted successfully')
 
 
-def upload_problem(session, base_url, auth, contest_id, filename):
+def upload_problem(base_url, auth, contest_id, filename):
     upload_response = requests.post(
         f'{base_url}/api/v4/contests/{contest_id}/problems',
         files={'zip': open(filename, 'rb')},
@@ -193,7 +193,7 @@ def main():
 
         delete_problem(session, base_url, problem_name)
 
-    result = upload_problem(session, base_url, auth, contest_id, sys.argv[1])
+    result = upload_problem(base_url, auth, contest_id, sys.argv[1])
     if result is True:
         print('-> Problem uploaded successfully')
     else:
