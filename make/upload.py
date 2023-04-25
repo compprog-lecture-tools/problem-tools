@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,6 +17,10 @@ def exit_error(message):
     sys.exit(1)
 
 
+def name_by_filename(filename):
+    return os.path.splitext(os.path.basename(filename))[0]
+
+
 def get_login_entries():
     path = Path(__file__).resolve().parents[2] / 'login.toml'
     try:
@@ -27,6 +32,9 @@ def get_login_entries():
 
 def is_active_testing_contest(contest):
     now = datetime.now(timezone.utc)
+    if 'start_time' not in contest or contest['start_time'] is None or 'end_time' not in contest or contest['end_time'] is None:
+        return False
+
     start_time = dateutil.parser.parse(contest['start_time'])
     end_time = dateutil.parser.parse(contest['end_time'])
     shortname = contest['shortname']
@@ -41,7 +49,32 @@ def get_active_testing_contest(base_url, auth):
     ]
 
 
-def upload_problem(base_url, auth, contest_id, filename):
+def problem_id_by_name(session, base_url, problem_name):
+    upload_response = session.get(base_url + '/jury/problems')
+    tree = html.document_fromstring(upload_response.content)
+    problem_links = tree.xpath(
+        f"//table/tbody/tr/td/a[contains(text(), '{problem_name}')]/@href")
+    if problem_links:
+        return name_by_filename(problem_links[0])
+    return False
+
+
+def problem_on_judge(session, base_url, problem_name):
+    return problem_id_by_name(session, base_url, problem_name) is not False
+
+
+def delete_problem(session, base_url, problem_name):
+    problem_id = problem_id_by_name(session, base_url, problem_name)
+
+    session.post(f'{base_url}/jury/problems/{problem_id}/delete')
+
+    if problem_on_judge(session, base_url, problem_name):
+        exit_error(f'Deleting the problem {problem_name} did not work!')
+
+    print('-> Problem deleted successfully')
+
+
+def upload_problem(session, base_url, auth, contest_id, filename):
     upload_response = requests.post(
         f'{base_url}/api/v4/contests/{contest_id}/problems',
         files={'zip': open(filename, 'rb')},
@@ -71,6 +104,20 @@ def login(session, base_url, csrf_token, username, password):
     return 'login' not in login_response.url
 
 
+def validator_on_judge(session, base_url, validator_name):
+    response = session.get(f'{base_url}/jury/executables/{validator_name}')
+
+    return response.status_code == 200
+
+
+def delete_validator(session, base_url, validator_name):
+    session.post(f'{base_url}/jury/executables/{validator_name}/delete')
+    if validator_on_judge(session, base_url, validator_name):
+        exit_error(f'Deleting the Executable {validator_name} did not work!')
+
+    print('-> Validator deleted successfully')
+
+
 def upload_validator(session, base_url, filename):
     data = {'executable_upload[type]': 'compare'}
     files = {'executable_upload[archives][]': open(filename, 'rb')}
@@ -88,10 +135,15 @@ def main():
     judges = get_login_entries()
     if any('contests' in judge for judge in judges.values()):
         print('login.toml contains contest list which is no longer needed')
-    base_url = prompt_choice('Where to upload to', judges.keys())
+
+    if len(judges) == 1:
+        base_url = list(judges.keys())[0]
+        print(f'Uploading to {base_url}')
+    else:
+        base_url = prompt_choice('Where to upload to', judges.keys())
+
     username = judges[base_url]['username']
     password = judges[base_url].get('password')
-
     auth = HTTPBasicAuth(username, password)
 
     if base_url[-1] == '/':
@@ -110,31 +162,40 @@ def main():
         for contest in contests
     ])
 
+    session = requests.Session()
+    csrf_token = get_csrf_token(session, base_url)
+    if not login(session, base_url, csrf_token, username, password):
+        exit_error('Invalid login data')
+
+    problem_name = name_by_filename(sys.argv[1])
+
     if len(sys.argv) == 3:
         # Upload the validator first, so that the problem can be linked to it
         # using its domjudge-problem.ini
 
-        session = requests.Session()
-        csrf_token = get_csrf_token(session, base_url)
-        if not login(session, base_url, csrf_token, username, password):
-            exit_error('Invalid login data')
+        validator_name = name_by_filename(sys.argv[2])
+        if validator_on_judge(session, base_url, validator_name):
+            if not questionary.confirm(
+                    'Validator already exists. Delete and reupload?').unsafe_ask():
+                exit(1)
+            delete_validator(session, base_url, validator_name)
 
         result = upload_validator(session, base_url, sys.argv[2])
         if result == 200:
             print('-> Validator uploaded successfully')
-        elif result == 500:
-            # We get a 500 code with lots of SQL code if the problem already
-            # exists
-            exit_error('Validator upload failed, maybe it was uploaded before')
         else:
             exit_error(f'Validator upload failed with status code {result}')
 
-    result = upload_problem(base_url, auth, contest_id, sys.argv[1])
+    if problem_on_judge(session, base_url, problem_name):
+        if not questionary.confirm(
+                'Problem already exists. Delete and reupload?').unsafe_ask():
+            exit(1)
+
+        delete_problem(session, base_url, problem_name)
+
+    result = upload_problem(session, base_url, auth, contest_id, sys.argv[1])
     if result is True:
         print('-> Problem uploaded successfully')
-    elif result == 200:
-        # If the problem already exists, we still get 200 as a response
-        exit_error('-> Problem upload failed, maybe it was uploaded before')
     else:
         exit_error(f'Problem upload failed with status code {result}')
 
