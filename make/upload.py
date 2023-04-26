@@ -199,7 +199,7 @@ def create_contest(base_url, auth, session):
         exit_error('Wrong format! (%d.%m.%y %H:%M)')
 
     end_time = questionary.text('End time:', default=(
-        datetime.now() + timedelta(weeks=2)).strftime('%d.%m.%y %H:%M')).unsafe_ask()
+        datetime.now() + timedelta(weeks=1)).strftime('%d.%m.%y %H:%M')).unsafe_ask()
 
     try:
         end_time = datetime.strptime(end_time, '%d.%m.%y %H:%M')
@@ -251,9 +251,11 @@ def get_judge_data():
 
     if base_url[-1] == '/':
         base_url = base_url[:-1]
-    auth = HTTPBasicAuth(username, password)
 
+    auth = HTTPBasicAuth(username, password)
     session = requests.Session()
+    # auth is used for api requests and the logged in session is needed for calls that are not supported by the api
+
     csrf_token = get_csrf_token(session, base_url)
     if not login(session, base_url, csrf_token, username, password):
         exit_error('Invalid login data')
