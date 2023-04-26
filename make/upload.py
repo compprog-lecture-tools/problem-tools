@@ -350,8 +350,9 @@ def main():
                         help='upload a contest?')
 
     args = parser.parse_args()
+    print(args)
 
-    if args.contest != (args.problem_zip is None or args.validator_zip is None):
+    if args.contest != (args.problem_zip is None and args.validator_zip is None):
         exit_error('Specify either contest or problem data')
 
     base_url, auth, session = get_judge_data()
