@@ -11,8 +11,7 @@ import toml
 import yaml
 from lxml import html
 from requests.auth import HTTPBasicAuth
-from dataclasses import dataclass
-from typing import List, Optional, NamedTuple
+from typing import List, Optional
 
 
 def exit_error(message):
