@@ -209,7 +209,7 @@ def create_contest(base_url, auth, session):
         exit_error('Wrong format! (%d.%m.%y %H:%M)')
 
     categories = get_team_categories(base_url, session)
-    if contest['contest[name]'].endswith('testing'):
+    if contest['contest[shortname]'].endswith('testing'):
         category_id = [category['id'] for category in categories if category['name'] == 'Staff']
         print('Using category Staff for testing contest')
     else:
