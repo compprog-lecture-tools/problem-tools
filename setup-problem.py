@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import datetime
 import json
 import random
 import re
@@ -12,7 +11,6 @@ from typing import List, Optional
 
 import jinja2
 import questionary
-from dateutil.relativedelta import relativedelta, TH
 
 NOT_COURSES = {'tools'}
 NOT_CONTESTS = {}
@@ -130,7 +128,7 @@ def prompt_problem_json_data():
     return data
 
 
-def prompt_problem_info(repo_root, cwd):
+def choose_course_and_contest(repo_root, cwd):
     course_dir, contest_dir = None, None
     if cwd.parent == repo_root:
         course_dir = cwd
@@ -152,6 +150,27 @@ def prompt_problem_info(repo_root, cwd):
     else:
         print(f'Using contest directory {contest_dir.name}')
 
+    return course_dir, contest_dir
+
+
+def setup_contest(repo_root, cwd):
+    course_dir, contest_dir = choose_course_and_contest(repo_root, cwd)
+    problems = [f.name for f in (
+        repo_root / 'collection' / 'problems').iterdir()]
+    while True:
+        problem = questionary.autocomplete('Choose problem from collection',
+                                           choices=problems).unsafe_ask()
+        problem_path = repo_root / 'collection' / 'problems' / problem
+        if not problem_path.exists():
+            print(f'Problem {problem} does not exist!')
+            continue
+        (contest_dir / problem).symlink_to(problem_path)
+        print('Symlink created!')
+
+
+def prompt_problem_info(repo_root, cwd):
+    course_dir, contest_dir = choose_course_and_contest(repo_root, cwd)
+
     problem_id = prompt_text('Problem id', validate=validate_problem_id)
     solution_lang = prompt_language('Solution language')
     generator_lang = prompt_language('Generator language')
@@ -166,7 +185,8 @@ def prompt_problem_info(repo_root, cwd):
     elif prompt_confirm('Add validator', default=False):
         validator_lang = prompt_language('Validator language')
         if prompt_confirm('Add answer generator'):
-            answer_generator_lang = prompt_language('Answer generator language')
+            answer_generator_lang = prompt_language(
+                'Answer generator language')
     timelimit = prompt_text('Timelimit', default='1.0')
     problem_json_data = prompt_problem_json_data()
     return ProblemInfo(course_dir, contest_dir, problem_id, solution_lang,
@@ -219,15 +239,16 @@ def setup_problem(info, repo_root):
     problem_dir = info.contest_dir / info.id
     problem_dir.mkdir()
 
-    render_template(jinja_env, 'repo:problem.tex', 
-                    problem_dir / 'problem.tex') # TODO this could be a simple copy
+    render_template(jinja_env, 'repo:problem.tex',
+                    problem_dir / 'problem.tex')  # TODO this could be a simple copy
     render_template(jinja_env, 'repo:notes.ipe', problem_dir / 'notes.ipe',
                     problem_name=info.name)
 
     executables_dir = problem_dir / 'executables'
     executables_dir.mkdir()
     seed = random.randrange(-2 ** 63, 2 ** 63)
-    setup_executable('solution', info.solution_lang, executables_dir, jinja_env)
+    setup_executable('solution', info.solution_lang,
+                     executables_dir, jinja_env)
     setup_executable('generator', info.generator_lang, executables_dir,
                      jinja_env, seed=seed)
     if info.validator_lang is not None:
@@ -289,13 +310,22 @@ def main():
     parser.add_argument('-u', '--upgrade', action='store_true',
                         help='Upgrade an existing problem instead of creating '
                              'a new one')
+    parser.add_argument('-c', '--contest', action='store_true',
+                        help='Create a new contest and copy existing problems'
+                        'from the collection')
     args = parser.parse_args()
 
     repo_root = Path(
         subprocess.check_output(GIT_REPO_ROOT_CMD).rstrip().decode('utf-8'))
     cwd = Path.cwd()
+    if args.upgrade and args.contest:
+        print('Use at most one option of upgrade and contest.')
+        exit(1)
+
     if args.upgrade:
         upgrade_problem(cwd, repo_root)
+    elif args.contest:
+        setup_contest(cwd, repo_root)
     else:
         info = prompt_problem_info(repo_root, cwd)
         setup_problem(info, repo_root)
