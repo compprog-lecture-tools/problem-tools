@@ -209,17 +209,17 @@ def create_contest(base_url, auth, session):
         exit_error('Wrong format! (%d.%m.%y %H:%M)')
 
     categories = get_team_categories(base_url, session)
-    if contest['contest[shortname]'].endswith('testing'):
-        category_id = [category['id']
+    if 'testing' in contest['contest[shortname]']:
+        category_ids = [category['id']
                        for category in categories if category['name'] == 'Staff']
         print('Using category Staff for testing contest')
     else:
-        category_id = questionary.select('Which category to add', [
+        category_ids = questionary.checkbox('Which category to add', [
             questionary.Choice(title=category['name'], value=category['id'])
             for category in categories
         ]).unsafe_ask()
 
-    contest['contest[teamCategories][]'] = category_id
+    contest['contest[teamCategories][]'] = category_ids
     contest['contest[activatetimeString]'] = contest['contest[starttimeString]']
 
     response = session.post(f'{base_url}/jury/contests/add', data=contest)
@@ -230,6 +230,9 @@ def create_contest(base_url, auth, session):
     contests = requests.get(f'{base_url}/api/v4/contests', auth=auth).json()
     contest_id = [c['id'] for c in contests if c['shortname']
                   == contest['contest[shortname]']][0]
+
+    if not contest_id:
+        exit_error('-> creating contest failed with unknown error')
 
     return contest_id
 
