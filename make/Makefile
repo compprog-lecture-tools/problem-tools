@@ -273,7 +273,7 @@ clean:
 .PHONY: upload
 upload: build/$(PROBLEM_ID).zip $(if $(VALIDATOR),build/$(PROBLEM_ID)-validator.zip)
 	echo Uploading archive
-	'$(TOOLS_MAKE_DIR)/upload.py' 'build/$(PROBLEM_ID).zip' $(if $(VALIDATOR),'build/$(PROBLEM_ID)-validator.zip')
+	'$(TOOLS_MAKE_DIR)/upload.py' -p 'build/$(PROBLEM_ID).zip' $(if $(VALIDATOR),-v 'build/$(PROBLEM_ID)-validator.zip')
 
 .PHONY: check-notes
 check-notes:

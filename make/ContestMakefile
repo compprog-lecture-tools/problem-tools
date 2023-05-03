@@ -19,6 +19,11 @@ check-notes:
 contest-pdf:
 	'$(TOOLS_MAKE_DIR)/build-contest-pdf.sh' contest.pdf $(PROBLEMS)
 
+.PHONY: upload
+upload:
+	$(foreach p,$(PROBLEMS),'$(MAKE)' -C $(p) pack;)
+	'$(TOOLS_MAKE_DIR)/upload.py' -c
+
 ifndef VERBOSE
 .SILENT:
 endif
