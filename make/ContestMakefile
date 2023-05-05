@@ -21,7 +21,7 @@ contest-pdf:
 
 .PHONY: upload
 upload:
-	$(foreach p,$(PROBLEMS),'$(MAKE)' -C $(p) pack;)
+	$(foreach p,$(PROBLEMS),cd -L $(p) && '$(MAKE)' pack && cd ..;)
 	'$(TOOLS_MAKE_DIR)/upload.py' -c
 
 ifndef VERBOSE
