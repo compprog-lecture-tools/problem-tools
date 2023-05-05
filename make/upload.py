@@ -35,8 +35,8 @@ def get_login_entries():
 def get_team_categories(base_url, session):
     response = session.get(base_url + '/jury/categories')
     tree = html.document_fromstring(response.content)
-    table_rows = tree.xpath(f"//tbody/tr")[0]
-    
+    table_rows = tree.xpath("//tbody/tr")[0]
+
     categories = []
     for i, n in zip(table_rows.xpath('//td[1]/a/text()'), table_rows.xpath('//td[4]/a/text()')):
 
@@ -117,7 +117,7 @@ def link_problem(base_url, auth, session, contest_id, problem_name):
         if 'already linked' not in str(response.content):
             exit_error(
                 f'linking problem {problem_name} failed with code {response.status_code}\n {response.content}'
-                )
+            )
 
     print(f'-> problem {problem_name} linked successfully')
 
@@ -199,7 +199,7 @@ def create_contest(base_url, auth, session):
         exit_error('Wrong format! (%d.%m.%y %H:%M)')
 
     end_time = questionary.text('End time:', default=(
-        datetime.now() + timedelta(weeks=1)).strftime('%d.%m.%y %H:%M')).unsafe_ask()
+        start_time + timedelta(weeks=1)).strftime('%d.%m.%y %H:%M')).unsafe_ask()
 
     try:
         end_time = datetime.strptime(end_time, '%d.%m.%y %H:%M')
@@ -209,16 +209,17 @@ def create_contest(base_url, auth, session):
         exit_error('Wrong format! (%d.%m.%y %H:%M)')
 
     categories = get_team_categories(base_url, session)
-    if contest['contest[shortname]'].endswith('testing'):
-        category_id = [category['id'] for category in categories if category['name'] == 'Staff']
+    if 'testing' in contest['contest[shortname]']:
+        category_ids = [category['id']
+                       for category in categories if category['name'] == 'Staff']
         print('Using category Staff for testing contest')
     else:
-        category_id = questionary.select('Which category to add', [
+        category_ids = questionary.checkbox('Which category to add', [
             questionary.Choice(title=category['name'], value=category['id'])
             for category in categories
         ]).unsafe_ask()
 
-    contest['contest[teamCategories][]'] = category_id
+    contest['contest[teamCategories][]'] = category_ids
     contest['contest[activatetimeString]'] = contest['contest[starttimeString]']
 
     response = session.post(f'{base_url}/jury/contests/add', data=contest)
@@ -229,6 +230,9 @@ def create_contest(base_url, auth, session):
     contests = requests.get(f'{base_url}/api/v4/contests', auth=auth).json()
     contest_id = [c['id'] for c in contests if c['shortname']
                   == contest['contest[shortname]']][0]
+
+    if not contest_id:
+        exit_error('-> creating contest failed with unknown error')
 
     return contest_id
 
@@ -350,7 +354,6 @@ def main():
                         help='upload a contest?')
 
     args = parser.parse_args()
-    print(args)
 
     if args.contest != (args.problem_zip is None and args.validator_zip is None):
         exit_error('Specify either contest or problem data')
