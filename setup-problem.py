@@ -64,6 +64,9 @@ class ProblemInfo:
         return self.interactor or 'cpp' in (
             self.generator_lang, self.validator_lang)
 
+    @property
+    def needs_testcaselib(self):
+        return self.generator_lang == 'cpp'
 
 def prompt_text(message, **kwargs):
     return questionary.text(message, **kwargs).unsafe_ask()
@@ -263,6 +266,10 @@ def setup_problem(info, repo_root):
     if info.needs_testlib:
         (executables_dir / 'testlib.h').symlink_to(
             '../../../../tools/make/testlib.h')
+        
+    if info.needs_testcaselib:
+        (executables_dir / 'testcase.h').symlink_to(
+            '../../../../tools/make/testcase.h')
 
     (problem_dir / 'domjudge-problem.ini').write_text(
         f'timelimit={info.timelimit}\n')
