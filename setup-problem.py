@@ -160,8 +160,10 @@ def setup_contest(repo_root, cwd):
     while True:
         problem = questionary.autocomplete('Choose problem from collection',
                                            choices=problems).unsafe_ask()
-        problem_path = repo_root / 'collection' / 'problems' / problem
-        if not problem_path.exists():
+        if not problem:
+            exit(0)
+        problem_path = Path('..') / '..' / 'collection' / 'problems' / problem
+        if not (contest_dir / problem_path).exists():
             print(f'Problem {problem} does not exist!')
             continue
         (contest_dir / problem).symlink_to(problem_path)
