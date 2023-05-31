@@ -71,7 +71,7 @@ def problem_id_by_name(session, base_url, problem_name):
     response = session.get(base_url + '/jury/problems')
     tree = html.document_fromstring(response.content)
     problem_links = tree.xpath(
-        f"//table/tbody/tr/td/a[contains(text(), '{problem_name}')]/@href")
+        f"//table/tbody/tr/td/a[contains(text(), ' {problem_name} ')]/@href")
     if problem_links:
         return name_by_filename(problem_links[0])
     return False
