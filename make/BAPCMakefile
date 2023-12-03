@@ -1,0 +1,3 @@
+notes: problem_statement/notes.ipe
+	mkdir -p build
+	ipetoipe -pdf -export "problem_statement/notes.ipe" "build/notes.pdf"  2> /dev/null
