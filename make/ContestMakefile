@@ -3,9 +3,15 @@ TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
 PROBLEMS=$(shell find -L . -mindepth 1 -maxdepth 1 -type d | sort)
 
 .PHONY: notes
-notes:
-	$(foreach p,$(PROBLEMS),'$(MAKE)' -C $(p) notes;)
-	pdfjam -q -o notes.pdf --fitpaper true --rotateoversize true $(foreach p,$(PROBLEMS),'$(p)/build/notes.pdf')
+notes: $(foreach p,$(PROBLEMS),$(p)/notes.pdf)
+	pdfjam --landscape -q -o notes.pdf $(foreach p,$(PROBLEMS),'$(p)/notes.pdf')
+
+%/notes.pdf: %
+	printf "Building notes for Problem $< with "
+	if [ -f "$</Makefile" ];\
+	then echo "make" && $(MAKE) -C "$<" notes && ln -sf build/notes.pdf "$</notes.pdf";\
+	else echo "bt" && bt solutions --problem "$<" && pdfjam --landscape -q -o "$</notes.pdf" "$</solution.en.pdf";\
+	fi
 
 .PHONY: clean
 clean:
