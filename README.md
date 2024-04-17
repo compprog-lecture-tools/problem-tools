@@ -69,7 +69,7 @@ To setup a new problem repository, create an empty git repo and then, from its r
 
   * Add this repo as submodule in the `tools` folder:
     ```bash
-    git submodule add git@gitlab.hpi.de:competitive-programming/problem-tools.git tools
+    git submodule add git@github.com:compprog-lecture-tools/problem-tools.git tools
     ```
   * Create a convenience symlink to the `setup-problem.py` script:
     ```bash
