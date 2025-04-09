@@ -12,7 +12,7 @@ find_cxx_compiler() {
             # because `sync_with_stdio` is a noop.
             # Try to use the newest GCC in /usr/local/bin which includes a version number
             # (this finds homebrew installed gcc's and possibly others)
-            CXX="$(find /usr/local/bin -name 'g++-*' | sort -r | head -n1)"
+            CXX="$(find /opt/homebrew/bin -name 'g++-*' | sort -r | head -n1)"
             if [[ $CXX == "" ]]; then
                 echo "GCC required (no g++-VERSION found in /usr/local/bin)" >&2
                 exit 1
