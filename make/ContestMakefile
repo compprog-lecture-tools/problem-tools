@@ -3,9 +3,23 @@ TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
 PROBLEMS=$(shell find -L . -mindepth 1 -maxdepth 1 -type d | sort)
 
 .PHONY: notes
-notes:
-	$(foreach p,$(PROBLEMS),'$(MAKE)' -C $(p) notes;)
-	pdfjam -q -o notes.pdf --fitpaper true --rotateoversize true $(foreach p,$(PROBLEMS),'$(p)/build/notes.pdf')
+notes: $(foreach p,$(PROBLEMS),$(p)/notes.pdf)
+	gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=notes.pdf -dBATCH $(foreach p,$(PROBLEMS),'$(p)/notes.pdf') > /dev/null
+
+%/notes.pdf: %
+	@if [ -f "$</problem_statement/solution.en.tex" ]; then \
+		echo "Making notes with bt  from $</problem_statement/solution.en.tex"; \
+		bt solutions --problem "$<" 2> /dev/null; \
+		ln -sf solution.en.pdf "$@"; \
+	elif [ -f "$</notes.ipe" ]; then \
+		echo "Making notes with ipe from $</notes.ipe"; \
+		ipetoipe -pdf -export "$</notes.ipe" "$@" 2> /dev/null; \
+	elif [ -f "$</problem_statement/notes.ipe" ]; then \
+		echo "Making notes with ipe from $</problem_statement/notes.ipe"; \
+		ipetoipe -pdf -export "$</problem_statement/notes.ipe" "$@" 2> /dev/null; \
+	else \
+		echo "Warning: No source file (problem_statement/solution.en.tex, notes.ipe, or problem_statement/notes.ipe) found for $@"; \
+	fi
 
 .PHONY: clean
 clean:
