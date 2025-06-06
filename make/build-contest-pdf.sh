@@ -23,7 +23,15 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 PDFJAM_PDFS=()
 for p in "${@:2}"; do
     cd $p
-    make pdf
+    if [ -f "problem.json" ]; then
+        echo "Building $p (make)"
+        make pdf
+    else
+        echo "Building $p (BAPC)"
+        bt pdf
+        mkdir -p build/problem
+        cp problem.en.pdf build/problem/problem.pdf
+    fi
     cd ..
     PAGES="$(pdfinfo "$p/build/problem/problem.pdf" | grep 'Pages:' | awk '{print $2}')"
     PDFJAM_PDFS+=("$p/build/problem/problem.pdf")
@@ -31,4 +39,4 @@ for p in "${@:2}"; do
         PDFJAM_PDFS+=("$SCRIPT_DIR/almost-blank-page/blank.pdf")
     fi
 done
-pdfjam -q -o "$1" --fitpaper true --rotateoversize true "${PDFJAM_PDFS[@]}"
+pdfjam -q -o "$1" --fitpaper true --rotateoversize true "${PDFJAM_PDFS[@]}" 2> /dev/null
