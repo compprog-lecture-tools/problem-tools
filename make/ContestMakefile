@@ -7,18 +7,18 @@ notes: $(foreach p,$(PROBLEMS),$(p)/notes.pdf)
 	gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=notes.pdf -dBATCH $(foreach p,$(PROBLEMS),'$(p)/notes.pdf') > /dev/null
 
 %/notes.pdf: %
-	@if [ -f "$</problem_statement/solution.en.tex" ]; then \
-		echo "Making notes with bt  from $</problem_statement/solution.en.tex"; \
+	@if [ -f "$</solution/solution.en.tex" ]; then \
+		echo "Making notes with bt from $</solution/solution.en.tex"; \
 		bt solutions --problem "$<" 2> /dev/null; \
 		ln -sf solution.en.pdf "$@"; \
 	elif [ -f "$</notes.ipe" ]; then \
 		echo "Making notes with ipe from $</notes.ipe"; \
 		ipetoipe -pdf -export "$</notes.ipe" "$@" 2> /dev/null; \
-	elif [ -f "$</problem_statement/notes.ipe" ]; then \
-		echo "Making notes with ipe from $</problem_statement/notes.ipe"; \
-		ipetoipe -pdf -export "$</problem_statement/notes.ipe" "$@" 2> /dev/null; \
+	elif [ -f "$</statement/notes.ipe" ]; then \
+		echo "Making notes with ipe from $</statement/notes.ipe"; \
+		ipetoipe -pdf -export "$</statement/notes.ipe" "$@" 2> /dev/null; \
 	else \
-		echo "Warning: No source file (problem_statement/solution.en.tex, notes.ipe, or problem_statement/notes.ipe) found for $@"; \
+		echo "Warning: No source file (solution/solution.en.tex, notes.ipe, or statement/notes.ipe) found for $@"; \
 	fi
 
 .PHONY: clean
