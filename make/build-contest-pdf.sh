@@ -22,17 +22,17 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 PDFJAM_PDFS=()
 for p in "${@:2}"; do
-    cd $p
     if [ -f "problem.json" ]; then
+        cd $p
         echo "Building $p (make)"
         make pdf
+        cd ..
     else
         echo "Building $p (BAPC)"
-        bt pdf
-        mkdir -p build/problem
-        cp problem.en.pdf build/problem/problem.pdf
+        bt pdf --problem $p
+        mkdir -p $p/build/problem
+        cp $p/problem.en.pdf $p/build/problem/problem.pdf
     fi
-    cd ..
     PAGES="$(pdfinfo "$p/build/problem/problem.pdf" | grep 'Pages:' | awk '{print $2}')"
     PDFJAM_PDFS+=("$p/build/problem/problem.pdf")
     if [[ $((PAGES % 2)) -eq 1 ]]; then
