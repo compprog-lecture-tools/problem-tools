@@ -22,7 +22,7 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
 PDFJAM_PDFS=()
 for p in "${@:2}"; do
-    if [ -f "problem.json" ]; then
+    if [ -f "$p/problem.json" ]; then
         cd $p
         echo "Building $p (make)"
         make pdf
