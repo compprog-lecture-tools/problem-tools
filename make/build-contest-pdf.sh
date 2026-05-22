@@ -29,9 +29,11 @@ for p in "${@:2}"; do
         cd ..
     else
         echo "Building $p (BAPC)"
-        bt pdf --problem $p
-        mkdir -p $p/build/problem
-        cp $p/problem.en.pdf $p/build/problem/problem.pdf
+        cd $p
+        bt pdf
+        mkdir -p build/problem
+        cp problem.en.pdf build/problem/problem.pdf
+        cd ..
     fi
     PAGES="$(pdfinfo "$p/build/problem/problem.pdf" | grep 'Pages:' | awk '{print $2}')"
     PDFJAM_PDFS+=("$p/build/problem/problem.pdf")
