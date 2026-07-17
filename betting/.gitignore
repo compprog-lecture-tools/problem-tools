@@ -1,0 +1,4 @@
+.config
+graph.html
+bets/*
+!bets/example.txt
