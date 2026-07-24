@@ -2,6 +2,7 @@
 ---
 Place named files with bets in the `bets` subdirectory and run the `bet.py` script.
 The API URL most likely is `<domjudge-url>/api/v4/` (including the `/` at the end).
+Update the constants at the top of `bets.py` if necessary.
 
 https://hpi.de/friedrich/judge/api/v4/
 

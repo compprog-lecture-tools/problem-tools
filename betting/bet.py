@@ -15,6 +15,7 @@ try:
 	DEFAULT_NUMBER_OF_PROBLEMS = 4
 	DEFAULT_REFRESH = 60.0
 	MIN_NAME_WIDTH = 9
+	NUMBER_OF_TEAMS_OVERRIDE = None
 
 	################################################################################
 	# read args
@@ -291,7 +292,11 @@ try:
 			for submission in submissions:
 				i = problems[submission['problem_id']]
 				solved[i].add(submission['team_id'])
-				results[i] = (100.0 * (len(teams) - len(solved[i]))) / len(teams)
+
+				num_teams = len(teams)
+				if NUMBER_OF_TEAMS_OVERRIDE is not None:
+					num_teams = NUMBER_OF_TEAMS_OVERRIDE
+				results[i] = (100.0 * (num_teams - len(solved[i]))) / num_teams
 
 				times.append(submission['contest_time'])
 				for name, bet in bets.items():
