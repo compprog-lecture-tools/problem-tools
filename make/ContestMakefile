@@ -1,6 +1,6 @@
 REPO_ROOT=$(shell git rev-parse --show-toplevel)
 TOOLS_MAKE_DIR=$(REPO_ROOT)/tools/make
-PROBLEMS=$(shell find -L . -mindepth 1 -maxdepth 1 -type d | sort)
+PROBLEMS=$(shell find -L . -mindepth 1 -maxdepth 1 -type d -not -name '.*' | sort)
 
 .PHONY: notes
 notes: $(foreach p,$(PROBLEMS),$(p)/notes.pdf)
