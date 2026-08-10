@@ -294,9 +294,11 @@ try:
 				solved[i].add(submission['team_id'])
 
 				num_teams = len(teams)
+				num_solved = len(solved[i])
 				if NUMBER_OF_TEAMS_OVERRIDE is not None:
 					num_teams = NUMBER_OF_TEAMS_OVERRIDE
-				results[i] = (100.0 * (num_teams - len(solved[i]))) / num_teams
+					num_solved = min(num_solved, num_teams)
+				results[i] = (100.0 * (num_teams - num_solved)) / num_teams
 
 				times.append(submission['contest_time'])
 				for name, bet in bets.items():
